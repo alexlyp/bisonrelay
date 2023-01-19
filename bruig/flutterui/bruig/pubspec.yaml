@@ -49,6 +49,10 @@ dependencies:
       url: https://github.com/google/flutter-desktop-embedding.git
       path: plugins/window_size
       ref: 17d4710c17f4913137e7ec931f6e71eaef443363
+  resizable_widget:
+    git:
+      url: https://github.com/KevinMalm/resizable_widget.git
+      ref: 2b0ab16b21570d99ebc0d82660ee0383ef826a4e
   msix: ^3.6.3
 
 msix_config:

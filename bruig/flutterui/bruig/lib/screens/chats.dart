@@ -10,6 +10,7 @@ import 'package:golib_plugin/definitions.dart';
 import 'package:golib_plugin/golib_plugin.dart';
 import 'package:provider/provider.dart';
 import '../components/active_chat.dart';
+import 'package:resizable_widget/resizable_widget.dart';
 
 class ChatsScreenTitle extends StatelessWidget {
   const ChatsScreenTitle({super.key});
@@ -240,17 +241,28 @@ class _ChatsScreenState extends State<ChatsScreen> {
       return const _InviteNeededPage();
     }
 
-    return Row(children: [
-      Container(width: 163, child: ChatDrawerMenu(editLineFocusNode)),
-      Expanded(
-          child: Container(
-        margin: const EdgeInsets.all(1),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(3),
-        ),
-        child: ActiveChat(client, editLineFocusNode),
-      )),
-    ]);
+    return ResizableWidget(
+        isDisabledSmartHide: true, // optional
+        separatorColor: Colors.white12, // optional
+        separatorSize: 4, // optional
+        percentages: const [
+          0.25,
+          0.75
+        ],
+        minPercentages: const [
+          0.25,
+          0.25
+        ],
+        children: [
+          ChatDrawerMenu(editLineFocusNode),
+          Container(
+            margin: const EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: ActiveChat(client, editLineFocusNode),
+          ),
+        ]); // optional);
   }
 }
