@@ -36,7 +36,9 @@ Future<String> defaultAppDataDir() async {
   }
 
   if (Platform.isWindows && Platform.environment.containsKey("LOCALAPPDATA")) {
-    return path.join(Platform.environment["LOCALAPPDATA"]!, APPNAME);
+    String myFolderPath = '${Platform.environment['AppData']}\\$APPNAME';
+    //return path.join(Platform.environment["LOCALAPPDATA"]!, APPNAME);
+    return myFolderPath;
   }
 
   if (Platform.isMacOS) {

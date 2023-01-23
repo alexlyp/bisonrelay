@@ -11,7 +11,9 @@ import 'package:path/path.dart' as path;
 class UnlockLNApp extends StatefulWidget {
   Config cfg;
   final String initialRoute;
-  UnlockLNApp(this.cfg, this.initialRoute, {Key? key}) : super(key: key);
+  final String appDataDir;
+  UnlockLNApp(this.cfg, this.initialRoute, this.appDataDir, {Key? key})
+      : super(key: key);
 
   void setCfg(Config c) {
     cfg = c;
@@ -23,13 +25,14 @@ class UnlockLNApp extends StatefulWidget {
 
 class _UnlockLNAppState extends State<UnlockLNApp> {
   Config get cfg => widget.cfg;
+  String get appData => widget.appDataDir;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Connect to Bison Relay",
       initialRoute: widget.initialRoute,
       routes: {
-        "/": (context) => _LNUnlockPage(widget.cfg, widget.setCfg),
+        "/": (context) => _LNUnlockPage(widget.cfg, widget.setCfg, appData),
         "/sync": (context) => _LNChainSyncPage(widget.cfg)
       },
       builder: (BuildContext context, Widget? child) => Scaffold(
@@ -42,7 +45,9 @@ class _UnlockLNAppState extends State<UnlockLNApp> {
 class _LNUnlockPage extends StatefulWidget {
   final Config cfg;
   final Function(Config) setCfg;
-  const _LNUnlockPage(this.cfg, this.setCfg, {Key? key}) : super(key: key);
+  final String appData;
+  const _LNUnlockPage(this.cfg, this.setCfg, this.appData, {Key? key})
+      : super(key: key);
 
   @override
   State<_LNUnlockPage> createState() => __LNUnlockPageState();
@@ -124,7 +129,7 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
             padding: const EdgeInsets.all(10),
             child: Column(children: [
               const SizedBox(height: 258),
-              Text("Connect to Bison Relay",
+              Text(widget.appData,
                   style: TextStyle(
                       color: textColor,
                       fontSize: 34,
@@ -432,10 +437,10 @@ class _LNChainSyncPageState extends State<_LNChainSyncPage> {
   }
 }
 
-Future<void> runUnlockDcrlnd(Config cfg) async {
-  runApp(UnlockLNApp(cfg, "/"));
+Future<void> runUnlockDcrlnd(Config cfg, String appDataDir) async {
+  runApp(UnlockLNApp(cfg, "/", appDataDir));
 }
 
 Future<void> runChainSyncDcrlnd(Config cfg) async {
-  runApp(UnlockLNApp(cfg, "/sync"));
+  runApp(UnlockLNApp(cfg, "/sync", ""));
 }

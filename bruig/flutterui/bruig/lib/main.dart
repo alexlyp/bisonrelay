@@ -60,7 +60,7 @@ void main(List<String> args) async {
     Config cfg = await configFromArgs(args);
     await Golib.createLockFile(cfg.dbRoot);
     if (cfg.walletType == "internal") {
-      await runUnlockDcrlnd(cfg);
+      await runUnlockDcrlnd(cfg, defAppDir);
       return;
     }
     await runMainApp(cfg);
