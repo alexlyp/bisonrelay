@@ -36,9 +36,15 @@ Future<String> defaultAppDataDir() async {
   }
 
   if (Platform.isWindows && Platform.environment.containsKey("LOCALAPPDATA")) {
-    String myFolderPath = '${Platform.environment['AppData']}\\$APPNAME';
+    String myNewFolderPath = '${Platform.environment['AppData']}\\$APPNAME';
+    String myOldFolderPath =
+        '${Platform.environment['LOCALAPPDATA']}\\$APPNAME';
     //return path.join(Platform.environment["LOCALAPPDATA"]!, APPNAME);
-    return myFolderPath;
+    var myDir = Directory(myOldFolderPath);
+    if (myDir.existsSync()) {
+      myDir.rename(myNewFolderPath);
+    }
+    return myNewFolderPath;
   }
 
   if (Platform.isMacOS) {
