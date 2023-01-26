@@ -282,9 +282,8 @@ class ManageGCScreenState extends State<ManageGCScreenForChat> {
                                 ))),
                     ElevatedButton(
                         //style: ElevatedButton.styleFrom(primary: Colors.grey),
-                        onPressed: !loading
-                            ? () => widget.client.profile = null
-                            : null,
+                        onPressed:
+                            !loading ? () => widget.chat.profile = null : null,
                         child: const Text("Done"))
                   ],
                 ))),

@@ -118,7 +118,7 @@ class MainMenuModel extends ChangeNotifier {
 
 class ChatMenuItem {
   final String label;
-  final Function(BuildContext context, ClientModel chats) onSelected;
+  final Function(BuildContext context, ChatModel chat) onSelected;
   const ChatMenuItem(this.label, this.onSelected);
 }
 
@@ -164,46 +164,45 @@ List<ChatMenuItem> buildUserChatMenu(ChatModel chat) {
   }
 
   return <ChatMenuItem>[
-    ChatMenuItem(
-        "User Profile", (context, chats) => chats.profile = chats.active),
+    ChatMenuItem("User Profile", (context, chat) => chat.profile = chat),
     //.of(context, rootNavigator: true).pushNamed('/userProfile', arguments: UserProfileArgs(chat))),
     ChatMenuItem(
       "Pay Tip",
-      (context, chats) => showPayTipModalBottom(context, chats.active!),
+      (context, chat) => showPayTipModalBottom(context, chat),
     ),
     ChatMenuItem(
       "Request Ratchet Reset",
-      (context, chats) => chats.active!.requestKXReset(),
+      (context, chat) => chat.requestKXReset(),
     ),
     ChatMenuItem(
       "Show Content",
-      (context, chats) => listUserContent(context, chats.active!),
+      (context, chat) => listUserContent(context, chat),
     ),
     ChatMenuItem(
       "Subscribe to Posts",
-      (context, chats) => chats.active!.subscribeToPosts(),
+      (context, chat) => chat.subscribeToPosts(),
     ),
     ChatMenuItem(
       "List Posts",
-      (context, chats) => listUserPosts(context, chats.active!),
+      (context, chat) => listUserPosts(context, chat),
     ),
     ChatMenuItem(
       "Send File",
-      (context, chats) => sendFile(context, chats.active!),
+      (context, chat) => sendFile(context, chat),
     ),
     ChatMenuItem(
       "Rename User",
-      (context, chats) => showRenameModalBottom(context, chats.active!),
+      (context, chat) => showRenameModalBottom(context, chat),
     ),
   ];
 }
 
 List<ChatMenuItem> buildGCMenu(ChatModel chat) {
   return [
-    ChatMenuItem("Manage GC", (context, chats) => chats.profile = chats.active),
+    ChatMenuItem("Manage GC", (context, chat) => chat.profile = chat),
     ChatMenuItem(
       "Rename GC",
-      (context, chats) => showRenameModalBottom(context, chats.active!),
+      (context, chats) => showRenameModalBottom(context, chat),
     ),
   ];
 }

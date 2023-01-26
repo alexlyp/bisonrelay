@@ -69,7 +69,7 @@ class _ActiveChatState extends State<ActiveChat> {
     if (this.chat == null) return Container();
     var chat = this.chat!;
 
-    var profile = client.profile;
+    var profile = chat.profile;
     if (profile != null) {
       if (chat.isGC) {
         return ManageGCScreen();
@@ -843,10 +843,37 @@ class _MessagesState extends State<Messages> {
   @override
   Widget build(BuildContext context) {
     var msgs = chat.msgs; // Probably inneficient to regenerate every render...
-    return ListView.builder(
-        controller: _scroller,
-        itemCount: msgs.length,
-        itemBuilder: (context, index) =>
-            Event(chat, msgs[index], nick, scrollToBottom));
+    return /*Stack(children: [
+                  ListView.builder(
+                    itemCount: chat.subGCMenu.length,
+                    itemBuilder: (context, index) => ListTile(
+                      title: Text(chat.subGCMenu[index].label,
+                          style: const TextStyle(fontSize: 11)),
+                      onTap: () {
+                        chat.subGCMenu[index].onSelected(context, chat);
+                        closeMenus(chat);
+                      },
+                    ),
+                  ),
+                  Positioned(
+                      top: 5,
+                      right: 5,
+                      child: Material(
+                          color: selectedBackgroundColor.withOpacity(0),
+                          child: IconButton(
+                              splashRadius: 15,
+                              hoverColor: selectedBackgroundColor,
+                              iconSize: 15,
+                              onPressed: () => closeMenus(chat),
+                              icon: Icon(
+                                  color: darkTextColor,
+                                  Icons.close_outlined)))),
+                ])
+                :*/
+        ListView.builder(
+            controller: _scroller,
+            itemCount: msgs.length,
+            itemBuilder: (context, index) =>
+                Event(chat, msgs[index], nick, scrollToBottom));
   }
 }

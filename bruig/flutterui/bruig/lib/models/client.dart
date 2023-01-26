@@ -85,6 +85,14 @@ class ChatModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  ChatModel? _profile;
+  ChatModel? get profile => _profile;
+  set profile(ChatModel? c) {
+    _profile = c;
+    //c?._setShowProfile(true);
+    notifyListeners();
+  }
+
   List<ChatEventModel> _msgs = [];
   UnmodifiableListView<ChatEventModel> get msgs => UnmodifiableListView(_msgs);
   void append(ChatEventModel msg) {
@@ -178,6 +186,24 @@ class ChatModel extends ChangeNotifier {
       }
     })();
   }
+
+  List<ChatMenuItem> _subGCMenu = [];
+  UnmodifiableListView<ChatMenuItem> get subGCMenu =>
+      UnmodifiableListView(_subGCMenu);
+
+  void set subGCMenu(List<ChatMenuItem> sm) {
+    _subGCMenu = sm;
+    notifyListeners();
+  }
+
+  List<ChatMenuItem> _subUserMenu = [];
+  UnmodifiableListView<ChatMenuItem> get subUserMenu =>
+      UnmodifiableListView(_subUserMenu);
+
+  void set subUserMenu(List<ChatMenuItem> sm) {
+    _subUserMenu = sm;
+    notifyListeners();
+  }
 }
 
 class ClientModel extends ChangeNotifier {
@@ -197,24 +223,6 @@ class ClientModel extends ChangeNotifier {
   UnmodifiableListView<ChatModel> get userChats =>
       UnmodifiableListView(_userChats);
 
-  List<ChatMenuItem> _subGCMenu = [];
-  UnmodifiableListView<ChatMenuItem> get subGCMenu =>
-      UnmodifiableListView(_subGCMenu);
-
-  void set subGCMenu(List<ChatMenuItem> sm) {
-    _subGCMenu = sm;
-    notifyListeners();
-  }
-
-  List<ChatMenuItem> _subUserMenu = [];
-  UnmodifiableListView<ChatMenuItem> get subUserMenu =>
-      UnmodifiableListView(_subUserMenu);
-
-  void set subUserMenu(List<ChatMenuItem> sm) {
-    _subUserMenu = sm;
-    notifyListeners();
-  }
-
   String _publicID = "";
   String get publicID => _publicID;
 
@@ -230,18 +238,9 @@ class ClientModel extends ChangeNotifier {
   ChatModel? _active;
   ChatModel? get active => _active;
   void set active(ChatModel? c) {
-    _profile = null;
     _active?._setActive(false);
     _active = c;
     c?._setActive(true);
-    notifyListeners();
-  }
-
-  ChatModel? _profile;
-  ChatModel? get profile => _profile;
-  set profile(ChatModel? c) {
-    _profile = c;
-    //c?._setShowProfile(true);
     notifyListeners();
   }
 

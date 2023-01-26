@@ -132,7 +132,7 @@ class _UserProfileState extends State<UserProfile> {
           child: Text(""),
         ),
         ElevatedButton(
-            onPressed: () => widget.client.profile = null,
+            onPressed: () => widget.chat.profile = null,
             child: const Text("Done"))
       ],
     );
