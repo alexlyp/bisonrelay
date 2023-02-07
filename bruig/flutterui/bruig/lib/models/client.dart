@@ -193,10 +193,18 @@ class ClientModel extends ChangeNotifier {
 
   List<ChatModel> _gcChats = [];
   UnmodifiableListView<ChatModel> get gcChats => UnmodifiableListView(_gcChats);
+  void set gcChats(List<ChatModel> gc) {
+    _gcChats = gc;
+    notifyListeners();
+  }
 
   List<ChatModel> _userChats = [];
   UnmodifiableListView<ChatModel> get userChats =>
       UnmodifiableListView(_userChats);
+  void set userChats(List<ChatModel> us) {
+    _userChats = us;
+    notifyListeners();
+  }
 
   List<ChatMenuItem> _subGCMenu = [];
   UnmodifiableListView<ChatMenuItem> get subGCMenu =>
@@ -393,7 +401,7 @@ class ClientModel extends ChangeNotifier {
             sortedGCList.add(_gcChats[i]);
           }
         }
-        _gcChats = sortedGCList;
+        gcChats = sortedGCList;
       }
     });
     StorageManager.readData('userListOrder').then((value) {
@@ -423,7 +431,7 @@ class ClientModel extends ChangeNotifier {
             sortedUserList.add(_userChats[i]);
           }
         }
-        _userChats = sortedUserList;
+        userChats = sortedUserList;
       }
     });
   }
