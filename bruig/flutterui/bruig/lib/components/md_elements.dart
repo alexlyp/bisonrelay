@@ -274,6 +274,7 @@ class MarkdownArea extends StatelessWidget {
         builder: (context, theme, _) => MarkdownBody(
             styleSheet: MarkdownStyleSheet(
               p: TextStyle(
+                  fontFamilyFallback: const ["NotoEmoji"],
                   fontSize: 8 + theme.getFontSize() * 7,
                   color: textColor,
                   fontWeight: FontWeight.w300,
