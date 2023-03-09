@@ -253,6 +253,17 @@ class ClientModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void payTipToID(String id, double amount) async {
+    var tip = await Golib.payTip(id, amount);
+    for (int i = 0; i < _userChats.length; i++) {
+      if (_userChats[i].id == id) {
+        _userChats[i].append(ChatEventModel(tip, _userChats[i]));
+        break;
+      }
+    }
+    notifyListeners();
+  }
+
   final Map<String, List<ChatMenuItem>> _subGCMenus = {};
   UnmodifiableMapView<String, List<ChatMenuItem>> get subGCMenus =>
       UnmodifiableMapView(_subGCMenus);

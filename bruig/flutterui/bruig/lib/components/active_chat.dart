@@ -331,6 +331,8 @@ class ReceivedSentPM extends StatefulWidget {
 
 class _ReceivedSentPMState extends State<ReceivedSentPM> {
   void eventChanged() => setState(() {});
+  var _hovered = false;
+  var self = true;
 
   @override
   initState() {
@@ -357,6 +359,14 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
     }
   }
 
+  void _onEnteredCellZone() {
+    setState(() => _hovered = true);
+  }
+
+  void _onExitCellZone() {
+    setState(() => _hovered = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     var prefix = "";
@@ -377,6 +387,7 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
     var sourceID = widget.evnt.event.sid;
     if (widget.evnt.source != null) {
       sourceID = widget.evnt.source!.id;
+      self = false;
     }
     var now = DateTime.fromMillisecondsSinceEpoch(widget.timestamp);
     var formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
@@ -396,7 +407,6 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
             : darkTextColor;
     var selectedBackgroundColor = theme.highlightColor;
     var textColor = theme.dividerColor;
-
     return Column(children: [
       widget.evnt.firstUnread
           ? Row(children: [
@@ -466,17 +476,41 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
                     fontStyle: FontStyle.italic),
               )),
           const SizedBox(width: 24),
-          Provider<DownloadSource>(
-              create: (context) => DownloadSource(sourceID),
-              child: MarkdownArea(msg)),
           Expanded(
-              child: Align(
-                  alignment: Alignment.topRight,
-                  child: Text(
-                    date,
-                    style: TextStyle(
-                        fontSize: 9, color: darkTextColor), // DATE COLOR
-                  ))),
+              child: Container(
+                  padding: const EdgeInsets.all(5),
+                  color: _hovered ? selectedBackgroundColor : null,
+                  child: MouseRegion(
+                      onEnter: (_) => _onEnteredCellZone(),
+                      onExit: (_) => _onExitCellZone(),
+                      child: Stack(children: [
+                        MarkdownArea(msg),
+                        if (!self && _hovered)
+                          Positioned(
+                              top: -10,
+                              right: 0,
+                              child: Consumer<ClientModel>(
+                                  builder: (context, client, child) =>
+                                      IconButton(
+                                        splashRadius: 5,
+                                        hoverColor: selectedBackgroundColor,
+                                        icon: const Icon(Icons.flash_on,
+                                            size: 20),
+                                        padding: const EdgeInsets.all(0),
+                                        tooltip: "Tip 0.0001 DCR",
+                                        onPressed: () {
+                                          client.payTipToID(widget.id, 0.0001);
+                                        },
+                                      ))),
+                      ])))),
+          const SizedBox(width: 10),
+          Align(
+              alignment: Alignment.topRight,
+              child: Text(
+                date,
+                style:
+                    TextStyle(fontSize: 9, color: darkTextColor), // DATE COLOR
+              )),
           const SizedBox(width: 10)
         ]),
         const SizedBox(height: 5),
@@ -1048,3 +1082,10 @@ class _MessagesState extends State<Messages> {
             Event(chat, msgs[index], nick, scrollToBottom, widget.showSubMenu));
   }
 }
+/* 
+
+``` $ date --utc --date="@$(dcrctl getblockchaininfo | jq .deployments.treasury.since | dcrctl getblockhash - | dcrctl getblockheader - | jq .time)" Sat May  8 02:19:57 UTC 2021 ```
+
+
+
+*/ 
