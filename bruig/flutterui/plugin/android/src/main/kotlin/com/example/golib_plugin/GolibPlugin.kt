@@ -47,7 +47,7 @@ class GolibPlugin: FlutterPlugin, MethodCallHandler {
           val res = Golib.getURL(url);
           handler.post{ result.success(res) }
         } catch (e: Exception) {
-          handler.post{ result.error(e::class.qualifiedName, e.toString(), null); }
+          /// handler.post{ result.error(e::class.qualifiedName, e.toString(), null); }
         }
       }
     } else if (call.method == "setTag") {
