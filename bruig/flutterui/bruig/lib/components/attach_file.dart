@@ -97,6 +97,9 @@ class _AttachFileScreenState extends State<AttachFileScreen> {
         case "png":
           mime = "image/png";
           break;
+        case "mp4":
+          mime = "video/mp4";
+          break;
         default:
           throw "Unable to recognize type of embed";
       }

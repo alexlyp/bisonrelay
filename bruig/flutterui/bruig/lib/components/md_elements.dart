@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
-import 'dart:typed_data';
-// import 'package:dart_vlc/dart_vlc.dart' as vlc;
-import 'package:bruig/components/dcr_input.dart';
+import 'dart:io';
+import 'package:dart_vlc/dart_vlc.dart' as vlc;
 import 'package:bruig/components/empty_widget.dart';
 import 'package:bruig/components/info_grid.dart';
 import 'package:bruig/components/inputs.dart';
@@ -221,7 +220,6 @@ class _FormBlockSyntax extends md.BlockSyntax {
   }
 }
 
-/*
 class _VideoMarkdownDesktopElement extends StatefulWidget {
   final String filename;
   _VideoMarkdownDesktopElement(this.filename, {Key? key}) : super(key: key);
@@ -230,7 +228,6 @@ class _VideoMarkdownDesktopElement extends StatefulWidget {
   __VideoMarkdownDesktopElementState createState() =>
       __VideoMarkdownDesktopElementState();
 }
-
 
 class __VideoMarkdownDesktopElementState
     extends State<_VideoMarkdownDesktopElement> {
@@ -305,7 +302,7 @@ class __VideoMarkdownMobileElementState
     if (controller == null) {
       return Container(
         color: theme.cardColor,
-        child: Center(
+        child: const Center(
           child: Text("Loading..."),
         ),
       );
@@ -345,7 +342,7 @@ class VideoMarkdownElementBuilder extends MarkdownElementBuilder {
     );
   }
 }
-*/
+
 class MarkdownArea extends StatelessWidget {
   final String text;
   final bool hasNick;
@@ -432,7 +429,7 @@ class MarkdownArea extends StatelessWidget {
                 ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes
               ]),
               builders: {
-                //"video": VideoMarkdownElementBuilder(basedir),
+                "video": VideoMarkdownElementBuilder(basedir),
                 "codeblock": CodeblockMarkdownElementBuilder(),
                 "image": ImageMarkdownElementBuilder(),
                 "download":
