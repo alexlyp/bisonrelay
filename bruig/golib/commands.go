@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
-type CmdType uint32
+type CmdType = int32
 
 const (
 	CTUnknown                 CmdType = 0x00
@@ -171,14 +173,14 @@ func (cmd *cmd) decode(to interface{}) error {
 }
 
 type CmdResult struct {
-	ID      uint32
+	ID      int32
 	Type    CmdType
 	Err     error
 	Payload []byte
 }
 
 type CmdResultLoopCB interface {
-	F(*CmdResult)
+	F(id int32, typ CmdType, payload string, err string)
 }
 
 var cmdResultChan = make(chan *CmdResult)
@@ -189,6 +191,9 @@ func call(cmd *cmd) *CmdResult {
 
 	decode := func(to interface{}) bool {
 		err = cmd.decode(to)
+		if err != nil {
+			err = fmt.Errorf("unable to decode input payload: %v; full payload: %s", err, spew.Sdump(cmd.Payload))
+		}
 		return err == nil
 	}
 
@@ -201,25 +206,25 @@ func call(cmd *cmd) *CmdResult {
 			v, err = handleHello(name)
 		}
 	case CTInitClient:
-		var initClient InitClient
+		var initClient initClient
 		if decode(&initClient) {
 			err = handleInitClient(cmd.ClientHandle, initClient)
 		}
 
 	case CTLNTryConnect:
-		var args LNTryExternalDcrlnd
+		var args lNTryExternalDcrlnd
 		if decode(&args) {
 			v, err = handleLNTryExternalDcrlnd(args)
 		}
 
 	case CTLNInitDcrlnd:
-		var args LNInitDcrlnd
+		var args lNInitDcrlnd
 		if decode(&args) {
 			v, err = handleLNInitDcrlnd(ctx, args)
 		}
 
 	case CTLNRunDcrlnd:
-		var args LNInitDcrlnd
+		var args lNInitDcrlnd
 		if decode(&args) {
 			v, err = handleLNRunDcrlnd(ctx, args)
 		}
@@ -261,15 +266,15 @@ func call(cmd *cmd) *CmdResult {
 		resPayload, err = json.Marshal(v)
 	}
 
-	return &CmdResult{ID: cmd.ID, Err: err, Payload: resPayload}
+	return &CmdResult{ID: int32(cmd.ID), Err: err, Payload: resPayload}
 }
 
-func AsyncCall(typ CmdType, id, clientHandle uint32, payload []byte) {
+func AsyncCall(typ CmdType, id, clientHandle int32, payload string) {
 	cmd := &cmd{
 		Type:         typ,
-		ID:           id,
-		ClientHandle: clientHandle,
-		Payload:      payload,
+		ID:           uint32(id),
+		ClientHandle: uint32(clientHandle),
+		Payload:      []byte(payload),
 	}
 	go func() { cmdResultChan <- call(cmd) }()
 }
@@ -296,7 +301,15 @@ func NextCmdResult() *CmdResult {
 func CmdResultLoop(cb CmdResultLoopCB) {
 	go func() {
 		for {
-			cb.F(<-cmdResultChan)
+			r := <-cmdResultChan
+			var errMsg, payload string
+			if r.Err != nil {
+				errMsg = r.Err.Error()
+			}
+			if len(r.Payload) > 0 {
+				payload = string(r.Payload)
+			}
+			cb.F(r.ID, r.Type, payload, errMsg)
 		}
 	}()
 }

@@ -35,6 +35,7 @@ class _MyAppState extends State<MyApp> {
       platformVersion = 'Failed to get platform version.';
     }
 
+    print("gonna ask for hello");
     Golib.hello();
 
     () async {

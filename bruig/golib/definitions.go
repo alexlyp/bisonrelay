@@ -13,7 +13,7 @@ import (
 	lpclient "github.com/decred/dcrlnlpd/client"
 )
 
-type InitClient struct {
+type initClient struct {
 	ServerAddr        string `json:"server_addr"`
 	DBRoot            string `json:"dbroot"`
 	DownloadsDir      string `json:"downloads_dir"`
@@ -37,17 +37,17 @@ type InitClient struct {
 	CircuitLimit  uint32 `json:"circuit_limit"`
 }
 
-type IDInit struct {
+type iDInit struct {
 	Nick string `json:"nick"`
 	Name string `json:"name"`
 }
 
-type LocalInfo struct {
+type localInfo struct {
 	ID   clientintf.UserID `json:"id"`
 	Nick string            `json:"nick"`
 }
 
-type ServerCert struct {
+type serverCert struct {
 	InnerFingerprint string `json:"inner_fingerprint"`
 	OuterFingerprint string `json:"outer_fingerprint"`
 }
@@ -58,106 +58,106 @@ const (
 	ConnStateOnline         = 2
 )
 
-type ServerSessState struct {
+type serverSessState struct {
 	State          int     `json:"state"`
 	CheckWalletErr *string `json:"check_wallet_err"`
 }
 
-type PM struct {
+type pM struct {
 	UID       clientintf.UserID `json:"sid"` // sid == source id
 	Msg       string            `json:"msg"`
 	Mine      bool              `json:"mine"`
 	TimeStamp int64             `json:"timestamp"`
 }
 
-type RemoteUser struct {
+type remoteUser struct {
 	UID  string `json:"uid"`
 	Name string `json:"name"`
 	Nick string `json:"nick"`
 }
 
-func remoteUserFromPII(pii *zkidentity.PublicIdentity) RemoteUser {
-	return RemoteUser{
+func remoteUserFromPII(pii *zkidentity.PublicIdentity) remoteUser {
+	return remoteUser{
 		UID:  pii.Identity.String(),
 		Name: pii.Name,
 		Nick: pii.Nick,
 	}
 }
 
-type InviteToGC struct {
+type inviteToGC struct {
 	GC  zkidentity.ShortID `json:"gc"`
 	UID clientdb.UserID    `json:"uid"`
 }
 
-type GCAddressBookEntry struct {
+type gCAddressBookEntry struct {
 	ID      zkidentity.ShortID  `json:"id"`
 	Name    string              `json:"name"`
 	Members []clientintf.UserID `json:"members"`
 }
 
-type GCInvitation struct {
-	Inviter RemoteUser `json:"inviter"`
+type gCInvitation struct {
+	Inviter remoteUser `json:"inviter"`
 	IID     uint64     `json:"iid"`
 	Name    string     `json:"name"`
 }
 
-type GCMessage struct {
+type gCMessage struct {
 	SenderUID clientdb.UserID `json:"sender_uid"`
 	ID        string          `json:"sid"` // sid == source id == gc name
 	Msg       string          `json:"msg"`
 	TimeStamp int64           `json:"timestamp"`
 }
 
-type GCMessageToSend struct {
+type gCMessageToSend struct {
 	GC  zkidentity.ShortID `json:"gc"`
 	Msg string             `json:"msg"`
 }
 
-type GCRemoveUserArgs struct {
+type gCRemoveUserArgs struct {
 	GC  zkidentity.ShortID `json:"gc"`
 	UID clientintf.UserID  `json:"uid"`
 }
 
-type ShareFileArgs struct {
+type shareFileArgs struct {
 	Filename    string `json:"filename"`
 	UID         string `json:"uid"`
 	Cost        uint64 `json:"cost"`
 	Description string `json:"description"`
 }
 
-type UnshareFileArgs struct {
+type unshareFileArgs struct {
 	FID zkidentity.ShortID `json:"fid"`
 	UID *clientintf.UserID `json:"uid"`
 }
 
-type GetRemoteFileArgs struct {
+type getRemoteFileArgs struct {
 	UID clientintf.UserID  `json:"uid"`
 	FID zkidentity.ShortID `json:"fid"`
 }
 
-type PayTipArgs struct {
+type payTipArgs struct {
 	UID    clientintf.UserID `json:"uid"`
 	Amount float64           `json:"amount"`
 }
 
-type PostReceived struct {
+type postReceived struct {
 	UID      clientintf.UserID `json:"uid"`
 	PostMeta rpc.PostMetadata  `json:"post_meta"`
 }
 
-type ReadPostArgs struct {
+type readPostArgs struct {
 	From clientintf.UserID `json:"from"`
 	PID  clientintf.PostID `json:"pid"`
 }
 
-type CommentPostArgs struct {
+type commentPostArgs struct {
 	From    clientintf.UserID  `json:"from"`
 	PID     clientintf.PostID  `json:"pid"`
 	Comment string             `json:"comment"`
 	Parent  *clientintf.PostID `json:"parent,omitempty"`
 }
 
-type PostStatusReceived struct {
+type postStatusReceived struct {
 	PostFrom   clientintf.UserID      `json:"post_from"`
 	PID        clientintf.PostID      `json:"pid"`
 	StatusFrom clientintf.UserID      `json:"status_from"`
@@ -165,50 +165,50 @@ type PostStatusReceived struct {
 	Mine       bool                   `json:"mine"`
 }
 
-type MediateIDArgs struct {
+type mediateIDArgs struct {
 	Mediator clientintf.UserID `json:"mediator"`
 	Target   clientintf.UserID `json:"target"`
 }
 
-type PostActionArgs struct {
+type postActionArgs struct {
 	From clientintf.UserID `json:"from"`
 	PID  clientintf.PostID `json:"pid"`
 }
 
-type FileDownloadProgress struct {
+type fileDownloadProgress struct {
 	UID             clientintf.UserID `json:"uid"`
 	FID             clientdb.FileID   `json:"fid"`
 	Metadata        rpc.FileMetadata  `json:"metadata"`
 	NbMissingChunks int               `json:"nb_missing_chunks"`
 }
 
-type LNBalances struct {
+type lNBalances struct {
 	Channel *lnrpc.ChannelBalanceResponse `json:"channel"`
 	Wallet  *lnrpc.WalletBalanceResponse  `json:"wallet"`
 }
 
-type LNChannelPoint struct {
+type lNChannelPoint struct {
 	Txid        string `json:"txid"`
 	OutputIndex int    `json:"output_index"`
 }
 
-type LNCloseChannelRequest struct {
-	ChannelPoint LNChannelPoint `json:"channel_point"`
+type lNCloseChannelRequest struct {
+	ChannelPoint lNChannelPoint `json:"channel_point"`
 	Force        bool           `json:"force"`
 }
 
-type LNPayInvoiceRequest struct {
+type lNPayInvoiceRequest struct {
 	PaymentRequest string `json:"payment_request"`
 	Amount         int64  `json:"amount"`
 }
 
-type LNTryExternalDcrlnd struct {
+type lNTryExternalDcrlnd struct {
 	RPCHost      string `json:"rpc_host"`
 	TLSCertPath  string `json:"tls_cert_path"`
 	MacaroonPath string `json:"macaroon_path"`
 }
 
-type LNInitDcrlnd struct {
+type lNInitDcrlnd struct {
 	RootDir         string   `json:"root_dir"`
 	Network         string   `json:"network"`
 	Password        string   `json:"password"`
@@ -218,74 +218,74 @@ type LNInitDcrlnd struct {
 	TorIsolation    bool     `json:"torisolation"`
 }
 
-type LNNewWalletSeed struct {
+type lNNewWalletSeed struct {
 	Seed    string `json:"seed"`
 	RPCHost string `json:"rpc_host"`
 }
 
-type LNReqChannelArgs struct {
+type lNReqChannelArgs struct {
 	Server       string `json:"server"`
 	Key          string `json:"key"`
 	ChanSize     uint64 `json:"chan_size"`
 	Certificates string `json:"certificates"`
 }
 
-type LNReqChannelEstValue struct {
+type lNReqChannelEstValue struct {
 	Amount       uint64                `json:"amount"`
 	ServerPolicy lpclient.ServerPolicy `json:"server_policy"`
 }
 
-type ConfirmFileDownload struct {
+type confirmFileDownload struct {
 	UID      clientintf.UserID  `json:"uid"`
 	FID      zkidentity.ShortID `json:"fid"`
 	Metadata rpc.FileMetadata   `json:"metadata"`
 }
 
-type ConfirmFileDownloadReply struct {
+type confirmFileDownloadReply struct {
 	FID   zkidentity.ShortID `json:"fid"`
 	Reply bool               `json:"reply"`
 }
 
-type SendFileArgs struct {
+type sendFileArgs struct {
 	UID      clientintf.UserID `json:"uid"`
 	Filepath string            `json:"filepath"`
 }
 
-type UserPostList struct {
+type userPostList struct {
 	UID   clientintf.UserID  `json:"uid"`
 	Posts []rpc.PostListItem `json:"posts"`
 }
 
-type UserContentList struct {
+type userContentList struct {
 	UID   clientintf.UserID     `json:"uid"`
 	Files []clientdb.RemoteFile `json:"files"`
 }
 
-type LocalRenameArgs struct {
+type localRenameArgs struct {
 	ID      zkidentity.ShortID `json:"id"`
 	NewName string             `json:"new_name"`
 	IsGC    bool               `json:"is_gc"`
 }
 
-type PostSubscriptionResult struct {
+type postSubscriptionResult struct {
 	ID            zkidentity.ShortID `json:"id"`
 	WasSubRequest bool               `json:"was_sub_request"`
 	Error         string             `json:"error"`
 }
 
-type LastUserReceivedTime struct {
+type lastUserReceivedTime struct {
 	UID           clientintf.UserID `json:"uid"`
 	LastDecrypted int64             `json:"last_decrypted"`
 }
 
-type InvoiceGenFailed struct {
+type invoiceGenFailed struct {
 	UID       clientintf.UserID `json:"uid"`
 	Nick      string            `json:"nick"`
 	DcrAmount float64           `json:"dcr_amount"`
 	Err       string            `json:"err"`
 }
 
-type GCVersionWarn struct {
+type gCVersionWarn struct {
 	ID         zkidentity.ShortID `json:"id"`
 	Alias      string             `json:"alias"`
 	Version    uint8              `json:"version"`
@@ -293,42 +293,42 @@ type GCVersionWarn struct {
 	MaxVersion uint8              `json:"max_version"`
 }
 
-type GCAddedMembers struct {
+type gCAddedMembers struct {
 	ID   zkidentity.ShortID   `json:"id"`
 	UIDs []zkidentity.ShortID `json:"uids"`
 }
 
-type GCUpgradedVersion struct {
+type gCUpgradedVersion struct {
 	ID         zkidentity.ShortID `json:"id"`
 	OldVersion uint8              `json:"old_version"`
 	NewVersion uint8              `json:"new_version"`
 }
 
-type GCMemberParted struct {
+type gCMemberParted struct {
 	GCID   zkidentity.ShortID `json:"gcid"`
 	UID    zkidentity.ShortID `json:"uid"`
 	Reason string             `json:"reason"`
 	Kicked bool               `json:"kicked"`
 }
 
-type GCModifyAdmins struct {
+type gCModifyAdmins struct {
 	GCID      zkidentity.ShortID   `json:"gcid"`
 	NewAdmins []zkidentity.ShortID `json:"new_admins"`
 }
 
-type GCAdminsChanged struct {
+type gCAdminsChanged struct {
 	GCID    zkidentity.ShortID   `json:"gcid"`
 	Source  zkidentity.ShortID   `json:"source"`
 	Added   []zkidentity.ShortID `json:"added"`
 	Removed []zkidentity.ShortID `json:"removed"`
 }
 
-type SubscribeToPosts struct {
+type subscribeToPosts struct {
 	Target    clientintf.UserID  `json:"target"`
 	FetchPost *clientintf.PostID `json:"fetch_post"`
 }
 
-type SuggestKX struct {
+type suggestKX struct {
 	AlreadyKnown bool               `json:"alreadyknown"`
 	InviteeNick  string             `json:"inviteenick"`
 	Invitee      zkidentity.ShortID `json:"inviteeid"`
@@ -336,7 +336,7 @@ type SuggestKX struct {
 	Target       zkidentity.ShortID `json:"targetid"`
 }
 
-type Account struct {
+type account struct {
 	Name               string         `json:"name"`
 	UnconfirmedBalance dcrutil.Amount `json:"unconfirmed_balance"`
 	ConfirmedBalance   dcrutil.Amount `json:"confirmed_balance"`
@@ -344,35 +344,35 @@ type Account struct {
 	ExternalKeyCount   uint32         `json:"external_key_count"`
 }
 
-type SendOnChain struct {
+type sendOnChain struct {
 	Addr        string         `json:"addr"`
 	Amount      dcrutil.Amount `json:"amount"`
 	FromAccount string         `json:"from_account"`
 }
 
-type WriteInvite struct {
+type writeInvite struct {
 	FundAmount  dcrutil.Amount      `json:"fund_amount"`
 	FundAccount string              `json:"fund_account"`
 	GCID        *zkidentity.ShortID `json:"gc_id"`
 }
 
-type GeneratedKXInvite struct {
+type generatedKXInvite struct {
 	Blob  []byte                   `json:"blob"`
 	Funds *rpc.InviteFunds         `json:"funds"`
 	Key   clientintf.PaidInviteKey `json:"key"`
 }
 
-type RedeemedInviteFunds struct {
+type redeemedInviteFunds struct {
 	Txid  rpc.TxHash     `json:"txid"`
 	Total dcrutil.Amount `json:"total"`
 }
 
-type Invitation struct {
+type invitation struct {
 	Blob   []byte                      `json:"blob"`
 	Invite rpc.OOBPublicIdentityInvite `json:"invite"`
 }
 
-type FetchResourceArgs struct {
+type fetchResourceArgs struct {
 	UID        clientintf.UserID         `json:"uid"`
 	Path       []string                  `json:"path"`
 	Metadata   map[string]string         `json:"metadata,omitempty"`
@@ -381,7 +381,7 @@ type FetchResourceArgs struct {
 	Data       json.RawMessage           `json:"data"`
 }
 
-type SimpleStoreOrder struct {
+type simpleStoreOrder struct {
 	Order simplestore.Order `json:"order"`
 	Msg   string            `json:"msg"`
 }
