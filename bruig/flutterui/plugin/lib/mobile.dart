@@ -36,7 +36,7 @@ mixin BaseMobilePlatform on ChanneledPlatform, NtfStreams {
     var channel = EventChannel('cmdResultLoop');
     var stream = channel.receiveBroadcastStream();
     await for (var e in stream) {
-      //print("LLLLLLLLL got result loop $x");
+      //print("LLLLLLLLL got result loop $e");
 
       int id = e["id"] ?? 0;
       String err = e["error"] ?? "";
@@ -172,6 +172,7 @@ mixin BaseMobilePlatform on ChanneledPlatform, NtfStreams {
         break;
 
       case NTLogLine:
+        print("LOG: $payload");
         ntfLogLines.add(payload);
         break;
 

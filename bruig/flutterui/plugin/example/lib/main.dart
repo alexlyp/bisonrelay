@@ -40,14 +40,14 @@ class _MyAppState extends State<MyApp> {
 
     () async {
       var r = await Golib.asyncHello("slim shady");
-      developer.log("XXXX $r");
+      print("got hello reply $r");
     }();
 
     () async {
       try {
         await Golib.asyncHello("*bug"); // Should cause an exception
       } catch (e) {
-        developer.log("Got exception as expected: $e");
+        print("Got exception as expected: $e");
       }
     }();
 
