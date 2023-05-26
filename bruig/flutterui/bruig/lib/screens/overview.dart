@@ -268,29 +268,32 @@ class _OverviewScreenState extends State<OverviewScreen> {
                             : menuItem.icon,
                         title: Text(menuItem.label,
                             style: const TextStyle(fontSize: 15)))
-                    : ExpansionTile(
-                        title: Text(menuItem.label),
-                        initiallyExpanded:
-                            widget.mainMenu.activeMenu.label == menuItem.label,
-                        leading: (menuItem.label == "Chats" &&
-                                    client.hasUnreadChats) ||
-                                (menuItem.label == "News Feed" &&
-                                    widget.feed.hasUnreadPostsComments)
-                            ? menuItem.iconNotification
-                            : menuItem.icon,
-                        children: (menuItem.subMenuInfo.map((e) => ListTile(
-                            hoverColor: scaffoldBackgroundColor,
-                            selected: widget.mainMenu.activeMenu.label ==
-                                    menuItem.label &&
-                                widget.mainMenu.activePageTab == e.pageTab,
-                            selectedColor: selectedColor,
-                            iconColor: unselectedTextColor,
-                            textColor: unselectedTextColor,
-                            selectedTileColor: hoverColor,
-                            title: Text(e.label),
-                            onTap: () => goToSubMenuPage(
-                                menuItem.routeName, e.pageTab)))).toList(),
-                      );
+                    : Theme(
+                        data: Theme.of(context)
+                            .copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          title: Text(menuItem.label),
+                          initiallyExpanded: widget.mainMenu.activeMenu.label ==
+                              menuItem.label,
+                          leading: (menuItem.label == "Chats" &&
+                                      client.hasUnreadChats) ||
+                                  (menuItem.label == "News Feed" &&
+                                      widget.feed.hasUnreadPostsComments)
+                              ? menuItem.iconNotification
+                              : menuItem.icon,
+                          children: (menuItem.subMenuInfo.map((e) => ListTile(
+                              hoverColor: scaffoldBackgroundColor,
+                              selected: widget.mainMenu.activeMenu.label ==
+                                      menuItem.label &&
+                                  widget.mainMenu.activePageTab == e.pageTab,
+                              selectedColor: selectedColor,
+                              iconColor: unselectedTextColor,
+                              textColor: unselectedTextColor,
+                              selectedTileColor: hoverColor,
+                              title: Text(e.label),
+                              onTap: () => goToSubMenuPage(
+                                  menuItem.routeName, e.pageTab)))).toList(),
+                        ));
               }),
         ),
         body: Row(children: [
