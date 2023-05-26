@@ -102,6 +102,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
     }
   }
 
+  void goToSubMenuPage(String route, int pageTab) {
+    navKey.currentState!
+        .pushReplacementNamed(route, arguments: PageTabs(pageTab));
+    Timer(const Duration(milliseconds: 1),
+        () async => widget.mainMenu.activePageTab = pageTab);
+    Navigator.pop(context);
+  }
+
   void goToNewPost() {
     navKey.currentState!.pushReplacementNamed('/feed', arguments: PageTabs(3));
   }
@@ -239,26 +247,50 @@ class _OverviewScreenState extends State<OverviewScreen> {
               itemCount: widget.mainMenu.menus.length,
               itemBuilder: (context, index) {
                 var menuItem = widget.mainMenu.menus.elementAt(index);
-                return ListTile(
-                    hoverColor: scaffoldBackgroundColor,
-                    selected: widget.mainMenu.activeMenu.label ==
-                        menuItem.label,
-                    selectedColor: selectedColor,
-                    iconColor: unselectedTextColor,
-                    textColor: unselectedTextColor,
-                    selectedTileColor: hoverColor,
-                    onTap: () {
-                      switchScreen(menuItem.routeName);
-                      Navigator.pop(context);
-                    },
-                    leading:
-                        (menuItem.label == "Chats" && client.hasUnreadChats) ||
+                return menuItem.subMenuInfo.isEmpty
+                    ? ListTile(
+                        hoverColor: scaffoldBackgroundColor,
+                        selected:
+                            widget.mainMenu.activeMenu.label == menuItem.label,
+                        selectedColor: selectedColor,
+                        iconColor: unselectedTextColor,
+                        textColor: unselectedTextColor,
+                        selectedTileColor: hoverColor,
+                        onTap: () {
+                          switchScreen(menuItem.routeName);
+                          Navigator.pop(context);
+                        },
+                        leading: (menuItem.label == "Chats" &&
+                                    client.hasUnreadChats) ||
                                 (menuItem.label == "News Feed" &&
                                     widget.feed.hasUnreadPostsComments)
                             ? menuItem.iconNotification
                             : menuItem.icon,
-                    title: Text(menuItem.label,
-                        style: const TextStyle(fontSize: 15)));
+                        title: Text(menuItem.label,
+                            style: const TextStyle(fontSize: 15)))
+                    : ExpansionTile(
+                        title: Text(menuItem.label),
+                        initiallyExpanded:
+                            widget.mainMenu.activeMenu.label == menuItem.label,
+                        leading: (menuItem.label == "Chats" &&
+                                    client.hasUnreadChats) ||
+                                (menuItem.label == "News Feed" &&
+                                    widget.feed.hasUnreadPostsComments)
+                            ? menuItem.iconNotification
+                            : menuItem.icon,
+                        children: (menuItem.subMenuInfo.map((e) => ListTile(
+                            hoverColor: scaffoldBackgroundColor,
+                            selected: widget.mainMenu.activeMenu.label ==
+                                    menuItem.label &&
+                                widget.mainMenu.activePageTab == e.pageTab,
+                            selectedColor: selectedColor,
+                            iconColor: unselectedTextColor,
+                            textColor: unselectedTextColor,
+                            selectedTileColor: hoverColor,
+                            title: Text(e.label),
+                            onTap: () => goToSubMenuPage(
+                                menuItem.routeName, e.pageTab)))).toList(),
+                      );
               }),
         ),
         body: Row(children: [
