@@ -628,6 +628,7 @@ class _PostContentScreenForArgsState extends State<_PostContentScreenForArgs> {
       ]);
     }
 
+    bool isScreenSmall = MediaQuery.of(context).size.width <= 500;
     return Container(
         margin: const EdgeInsets.all(1),
         decoration: BoxDecoration(
@@ -639,8 +640,11 @@ class _PostContentScreenForArgsState extends State<_PostContentScreenForArgs> {
               children: [
                 Container(
                   // Post area
-                  margin: const EdgeInsets.only(
-                      left: 50, right: 50, top: 0, bottom: 0),
+                  margin: isScreenSmall
+                      ? const EdgeInsets.only(
+                          left: 19, right: 10, top: 0, bottom: 0)
+                      : const EdgeInsets.only(
+                          left: 50, right: 50, top: 0, bottom: 0),
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(3),
                       color: postBackgroundColor),

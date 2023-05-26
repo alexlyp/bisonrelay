@@ -224,6 +224,7 @@ class _FeedPostsState extends State<FeedPosts> {
 
   @override
   Widget build(BuildContext context) {
+    bool isScreenSmall = MediaQuery.of(context).size.width <= 500;
     var theme = Theme.of(context);
     var backgroundColor = theme.backgroundColor;
     var posts = widget.onlyShowOwnPosts
@@ -234,8 +235,9 @@ class _FeedPostsState extends State<FeedPosts> {
       margin: const EdgeInsets.all(1),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(3), color: backgroundColor),
-      padding:
-          const EdgeInsets.only(left: 117, right: 117, top: 10, bottom: 10),
+      padding: isScreenSmall
+          ? const EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 10)
+          : const EdgeInsets.only(left: 50, right: 50, top: 10, bottom: 10),
       child: ListView.builder(
           itemCount: posts.length,
           itemBuilder: (context, index) {
