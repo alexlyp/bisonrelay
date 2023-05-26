@@ -170,11 +170,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
     var scaffoldBackgroundColor = theme.canvasColor;
     var hoverColor = theme.hoverColor;
 
-    Widget ntfOverlay = const Empty();
-    if (widget.ntfns.count > 0) {
-      ntfOverlay =
-          const Icon(Icons.notifications, size: 15, color: Colors.amber);
-    }
     var connectedIcon = Icons.cloud;
     String connStateLabel;
     GestureTapCallback connStateAction;

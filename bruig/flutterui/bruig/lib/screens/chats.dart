@@ -114,7 +114,6 @@ class _LoadingAddressBookPage extends StatelessWidget {
     var theme = Theme.of(context);
     var backgroundColor = theme.backgroundColor;
     var textColor = const Color(0xFF8E8D98);
-    var secondaryTextColor = const Color(0xFFE4E3E6);
 
     return Container(
         padding: const EdgeInsets.all(20),

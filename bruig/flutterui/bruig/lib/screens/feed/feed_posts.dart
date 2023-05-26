@@ -78,7 +78,6 @@ class _FeedPostWState extends State<FeedPostW> {
 
     var theme = Theme.of(context);
     var bgColor = theme.highlightColor;
-    var textColor = theme.focusColor;
     var darkTextColor = theme.indicatorColor;
     var hightLightTextColor = theme.dividerColor; // NAME TEXT COLOR
     var avatarColor = colorFromNick(authorNick);
@@ -157,7 +156,7 @@ class _FeedPostWState extends State<FeedPostW> {
           const SizedBox(height: 5),
           Row(children: [
             hasUnreadComments
-                ? Row(children: const [
+                ? const Row(children: [
                     Icon(Icons.new_releases_outlined, color: Colors.amber),
                     SizedBox(width: 10),
                     Text("New Comments",

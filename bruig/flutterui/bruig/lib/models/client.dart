@@ -5,7 +5,6 @@ import 'package:bruig/models/resources.dart';
 import 'package:flutter/foundation.dart';
 import 'package:golib_plugin/definitions.dart';
 import 'package:golib_plugin/golib_plugin.dart';
-import 'package:golib_plugin/util.dart';
 import '../storage_manager.dart';
 
 const SCE_unknown = 0;
