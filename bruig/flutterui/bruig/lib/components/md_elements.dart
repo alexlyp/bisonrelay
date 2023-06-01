@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'dart:io';
 import 'package:dart_vlc/dart_vlc.dart' as vlc;
+import 'package:video_player/video_player.dart' as mbv;
 import 'package:bruig/components/empty_widget.dart';
 import 'package:bruig/components/info_grid.dart';
 import 'package:bruig/components/inputs.dart';
@@ -17,6 +18,7 @@ import 'package:tuple/tuple.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bruig/theme_manager.dart';
 import 'package:bruig/components/image_dialog.dart';
+import 'package:path/path.dart' as p;
 
 class DownloadSource {
   final String uid;
@@ -121,9 +123,14 @@ class EmbedInlineSyntax extends md.InlineSyntax {
         tag = "image";
         break;
       case "image/png":
+      case "image/avif":
+      case "image/webp":
       case "image/gif":
       case "image/bmp":
         tag = "image";
+        break;
+      case "video/mp4":
+        tag = "video";
         break;
       case "text/plain":
         // Decode plain text directly.
@@ -315,8 +322,8 @@ class __VideoMarkdownMobileElementState
 }
 
 class VideoMarkdownElementBuilder extends MarkdownElementBuilder {
-  final String basedir;
-  VideoMarkdownElementBuilder(this.basedir);
+  //final String basedir;
+  VideoMarkdownElementBuilder();
 
   @override
   Widget visitElementAfter(md.Element element, TextStyle? preferredStyle) {
@@ -324,11 +331,12 @@ class VideoMarkdownElementBuilder extends MarkdownElementBuilder {
         Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
     // Protect against trying to fetch from !basedir.
-    String filename = p.canonicalize(p.join(this.basedir, element.textContent));
+    String filename = element.textContent;
+    /*
     if (!p.isWithin(basedir, filename)) {
       return Container(color: Colors.amber, width: 100, height: 100);
     }
-
+*/
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       decoration: BoxDecoration(
@@ -429,7 +437,7 @@ class MarkdownArea extends StatelessWidget {
                 ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes
               ]),
               builders: {
-                "video": VideoMarkdownElementBuilder(basedir),
+                "video": VideoMarkdownElementBuilder(),
                 "codeblock": CodeblockMarkdownElementBuilder(),
                 "image": ImageMarkdownElementBuilder(),
                 "download":

@@ -97,6 +97,15 @@ class _AttachFileScreenState extends State<AttachFileScreen> {
         case "png":
           mime = "image/png";
           break;
+        case "gif":
+          mime = "image/gif";
+          break;
+        case "webp":
+          mime = "image/webp";
+          break;
+        case "avif":
+          mime = "image/avif";
+          break;
         case "mp4":
           mime = "video/mp4";
           break;

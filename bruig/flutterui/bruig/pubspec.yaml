@@ -26,11 +26,11 @@ dependencies:
   cupertino_icons: ^1.0.2
   dart_vlc: ^0.4.0
   dart_vlc_ffi: ^0.2.0+1
+  video_player: ^2.6.1
   golib_plugin:
     path: "../plugin"
   provider: ^6.0.0
   path: ^1.8.0
-  video_player: ^2.2.5
   crypto: ^3.0.1
   ini: ^2.1.0
   args: ^2.3.0

@@ -39,6 +39,7 @@ import 'package:golib_plugin/definitions.dart';
 import 'package:golib_plugin/golib_plugin.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:dart_vlc/dart_vlc.dart';
 import './screens/app_start.dart';
 
 final Random random = Random();
@@ -162,7 +163,7 @@ class _AppState extends State<App> with WindowListener {
           cfg.proxyPassword,
           cfg.circuitLimit);
       await Golib.initClient(initArgs);
-
+      DartVLC.initialize();
       navkey.currentState!.pushReplacementNamed(OverviewScreen.routeName);
 
       doWalletChecks();
