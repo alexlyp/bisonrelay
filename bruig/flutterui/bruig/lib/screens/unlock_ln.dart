@@ -133,7 +133,7 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
                   0.17,
                   1
                 ])),
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(30),
             child: isScreenSmall
                 ? Column(mainAxisAlignment: MainAxisAlignment.end, children: [
                     SizedBox(
@@ -141,23 +141,24 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
                         child: Text("Connect to Bison Relay",
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: textColor,
+                                color: secondaryTextColor,
                                 fontSize: 40,
-                                fontWeight: FontWeight.w400))),
+                                fontWeight: FontWeight.w300))),
                     SizedBox(
-                      height: MediaQuery.of(context).size.height / 3,
+                      height: MediaQuery.of(context).size.height / 6,
                     ),
                     loading
                         ? SizedBox(
-                            height: 35,
+                            width: 50,
+                            height: 50,
                             child: CircularProgressIndicator(
                                 value: null,
                                 backgroundColor: backgroundColor,
-                                color: textColor,
+                                color: secondaryTextColor,
                                 strokeWidth: 2),
                           )
-                        : const SizedBox(height: 35),
-                    const SizedBox(height: 20),
+                        : const SizedBox(height: 50),
+                    SizedBox(height: MediaQuery.of(context).size.height / 6),
                     Center(
                         child: Expanded(
                             child: TextField(
@@ -166,27 +167,42 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
                                 cursorColor: secondaryTextColor,
                                 decoration: InputDecoration(
                                     enabled: !loading,
+                                    labelText: "Password",
+                                    labelStyle: TextStyle(
+                                        letterSpacing: 0,
+                                        color: secondaryTextColor),
                                     errorText:
                                         _validate != "" ? _validate : null,
                                     errorBorder: const OutlineInputBorder(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(10.0)),
                                       borderSide: BorderSide(
                                           color: Colors.red, width: 2.0),
                                     ),
                                     focusedBorder: OutlineInputBorder(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10.0)),
                                       borderSide: BorderSide(
-                                          color: textColor, width: 2.0),
+                                          color: secondaryTextColor,
+                                          width: 2.0),
                                     ),
                                     border: OutlineInputBorder(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(10.0)),
                                       borderSide: BorderSide(
                                           color: cardColor, width: 2.0),
                                     ),
                                     hintText: "Password",
                                     hintStyle: TextStyle(
-                                        fontSize: 21, color: textColor),
+                                        letterSpacing: 0,
+                                        fontWeight: FontWeight.w100,
+                                        color: secondaryTextColor),
                                     filled: true,
                                     fillColor: cardColor),
                                 style: TextStyle(
-                                    color: secondaryTextColor, fontSize: 21),
+                                    letterSpacing: 5,
+                                    color: secondaryTextColor,
+                                    fontSize: 21),
                                 controller: passCtrl,
                                 obscureText: true,
                                 onSubmitted: (value) {
@@ -210,7 +226,6 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
                       onPressed: !loading ? unlock : null,
                       text: "Unlock Wallet",
                     ),
-                    const SizedBox(height: 34),
                   ])
                 : Column(children: [
                     Row(children: [
