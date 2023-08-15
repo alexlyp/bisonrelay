@@ -47,18 +47,34 @@ class LoadingScreenButton extends StatelessWidget {
   final bool loading;
   final String text;
   final bool empty;
+  final double minSize;
   const LoadingScreenButton(
       {required this.onPressed,
       required this.text,
       this.loading = false,
       this.empty = false,
+      this.minSize = 0,
       Key? key})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
-        style: empty ? emptyButtonStyle : raisedButtonStyle,
+        style: minSize != 0
+            ? ElevatedButton.styleFrom(
+                padding: const EdgeInsets.only(
+                    left: 34, top: 10, right: 34, bottom: 10),
+                minimumSize: Size(minSize - 30, 55),
+                foregroundColor: const Color(0xFFE4E3E6),
+                backgroundColor: const Color(0xFF252438),
+                //padding: EdgeInsets.symmetric(horizontal: 16),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                ),
+              )
+            : empty
+                ? emptyButtonStyle
+                : raisedButtonStyle,
         onPressed: !loading ? onPressed : null,
         child: Text(text,
             style:
