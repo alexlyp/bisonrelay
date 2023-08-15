@@ -81,3 +81,45 @@ class LoadingScreenButton extends StatelessWidget {
                 const TextStyle(fontSize: 21, fontWeight: FontWeight.normal)));
   }
 }
+
+class MobileScreenButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool loading;
+  final String text;
+  final bool empty;
+  final double minSize;
+  const MobileScreenButton(
+      {required this.onPressed,
+      required this.text,
+      this.loading = false,
+      this.empty = false,
+      this.minSize = 0,
+      Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    var buttonForeground = theme.backgroundColor;
+    var buttonBackground = theme.bottomAppBarColor;
+    return TextButton(
+        style: minSize != 0
+            ? ElevatedButton.styleFrom(
+                padding: const EdgeInsets.only(
+                    left: 34, top: 13, right: 34, bottom: 13),
+                minimumSize: Size(minSize - 46, 20),
+                foregroundColor: buttonForeground,
+                backgroundColor: buttonBackground,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                ),
+              )
+            : empty
+                ? emptyButtonStyle
+                : raisedButtonStyle,
+        onPressed: !loading ? onPressed : null,
+        child: Text(text,
+            style: const TextStyle(
+                letterSpacing: 1, fontSize: 13, fontWeight: FontWeight.w500)));
+  }
+}
