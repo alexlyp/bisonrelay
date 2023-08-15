@@ -109,6 +109,7 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
     var textColor = const Color(0xFF8E8D98);
     var secondaryTextColor = const Color(0xFFE4E3E6);
     var darkTextColor = const Color(0xFF5A5968);
+    bool isScreenSmall = MediaQuery.of(context).size.width <= 500;
     return Container(
         color: backgroundColor,
         child: Stack(children: [
@@ -133,89 +134,167 @@ class __LNUnlockPageState extends State<_LNUnlockPage> {
                   1
                 ])),
             padding: const EdgeInsets.all(10),
-            child: Column(children: [
-              Row(children: [
-                IconButton(
-                    alignment: Alignment.topLeft,
-                    tooltip: "About Bison Relay",
-                    iconSize: 50,
-                    onPressed: goToAbout,
-                    icon: Image.asset(
-                      "assets/images/icon.png",
-                    )),
-              ]),
-              const SizedBox(height: 208),
-              Text("Connect to Bison Relay",
-                  style: TextStyle(
-                      color: textColor,
-                      fontSize: 34,
-                      fontWeight: FontWeight.w200)),
-              const SizedBox(height: 34),
-              Column(children: [
-                SizedBox(
-                    width: 377,
-                    child: Text("Password",
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                            color: darkTextColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w300))),
-                const SizedBox(height: 5),
-                Center(
-                    child: SizedBox(
-                        width: 377,
-                        child: TextField(
-                            autofocus: true,
-                            cursorColor: secondaryTextColor,
-                            decoration: InputDecoration(
-                                errorText: _validate,
-                                border: InputBorder.none,
-                                hintText: "Password",
-                                hintStyle:
-                                    TextStyle(fontSize: 21, color: textColor),
-                                filled: true,
-                                fillColor: cardColor),
+            child: isScreenSmall
+                ? Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                    SizedBox(
+                        width: 250,
+                        child: Text("Connect to Bison Relay",
+                            textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: secondaryTextColor, fontSize: 21),
-                            controller: passCtrl,
-                            obscureText: true,
-                            onSubmitted: (value) {
-                              if (!loading) {
-                                unlock();
-                              }
-                            },
-                            onChanged: (value) {
-                              setState(() {
-                                _validate = value.isEmpty
-                                    ? "Password cannot be empty"
-                                    : "";
-                              });
-                            }))),
-                const SizedBox(height: 34),
-                Center(
-                    child: SizedBox(
-                        width: 283,
-                        child: Row(children: [
-                          const SizedBox(width: 35),
-                          LoadingScreenButton(
-                            onPressed: !loading ? unlock : null,
-                            text: "Unlock Wallet",
-                          ),
-                          const SizedBox(width: 10),
-                          loading
-                              ? SizedBox(
-                                  height: 25,
-                                  width: 25,
-                                  child: CircularProgressIndicator(
-                                      value: null,
-                                      backgroundColor: backgroundColor,
-                                      color: textColor,
-                                      strokeWidth: 2),
-                                )
-                              : const SizedBox(width: 25),
-                        ])))
-              ]),
-            ]),
+                                color: textColor,
+                                fontSize: 40,
+                                fontWeight: FontWeight.w400))),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height / 3,
+                    ),
+                    loading
+                        ? SizedBox(
+                            height: 35,
+                            child: CircularProgressIndicator(
+                                value: null,
+                                backgroundColor: backgroundColor,
+                                color: textColor,
+                                strokeWidth: 2),
+                          )
+                        : const SizedBox(height: 35),
+                    const SizedBox(height: 20),
+                    Center(
+                        child: Expanded(
+                            child: TextField(
+                                enabled: !loading,
+                                autofocus: true,
+                                cursorColor: secondaryTextColor,
+                                decoration: InputDecoration(
+                                    enabled: !loading,
+                                    errorText:
+                                        _validate != "" ? _validate : null,
+                                    errorBorder: const OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                          color: Colors.red, width: 2.0),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                          color: textColor, width: 2.0),
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                          color: cardColor, width: 2.0),
+                                    ),
+                                    hintText: "Password",
+                                    hintStyle: TextStyle(
+                                        fontSize: 21, color: textColor),
+                                    filled: true,
+                                    fillColor: cardColor),
+                                style: TextStyle(
+                                    color: secondaryTextColor, fontSize: 21),
+                                controller: passCtrl,
+                                obscureText: true,
+                                onSubmitted: (value) {
+                                  if (!loading) {
+                                    unlock();
+                                  }
+                                },
+                                onChanged: (value) {
+                                  setState(() {
+                                    _validate = value.isEmpty
+                                        ? "Password cannot be empty"
+                                        : "";
+                                  });
+                                }))),
+                    _validate == ""
+                        ? const SizedBox(height: 22)
+                        : const Empty(),
+                    const SizedBox(height: 34),
+                    LoadingScreenButton(
+                      minSize: MediaQuery.of(context).size.width,
+                      onPressed: !loading ? unlock : null,
+                      text: "Unlock Wallet",
+                    ),
+                    const SizedBox(height: 34),
+                  ])
+                : Column(children: [
+                    Row(children: [
+                      IconButton(
+                          alignment: Alignment.topLeft,
+                          tooltip: "About Bison Relay",
+                          iconSize: 50,
+                          onPressed: goToAbout,
+                          icon: Image.asset(
+                            "assets/images/icon.png",
+                          )),
+                    ]),
+                    const SizedBox(height: 208),
+                    Text("Connect to Bison Relay",
+                        style: TextStyle(
+                            color: textColor,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w200)),
+                    const SizedBox(height: 34),
+                    Column(children: [
+                      SizedBox(
+                          width: 377,
+                          child: Text("Password",
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                  color: darkTextColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w300))),
+                      const SizedBox(height: 5),
+                      Center(
+                          child: SizedBox(
+                              width: 377,
+                              child: TextField(
+                                  autofocus: true,
+                                  cursorColor: secondaryTextColor,
+                                  decoration: InputDecoration(
+                                      errorText: _validate,
+                                      border: InputBorder.none,
+                                      hintText: "Password",
+                                      hintStyle: TextStyle(
+                                          fontSize: 21, color: textColor),
+                                      filled: true,
+                                      fillColor: cardColor),
+                                  style: TextStyle(
+                                      color: secondaryTextColor, fontSize: 21),
+                                  controller: passCtrl,
+                                  obscureText: true,
+                                  onSubmitted: (value) {
+                                    if (!loading) {
+                                      unlock();
+                                    }
+                                  },
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _validate = value.isEmpty
+                                          ? "Password cannot be empty"
+                                          : "";
+                                    });
+                                  }))),
+                      const SizedBox(height: 34),
+                      Center(
+                          child: SizedBox(
+                              width: 283,
+                              child: Row(children: [
+                                const SizedBox(width: 35),
+                                LoadingScreenButton(
+                                  onPressed: !loading ? unlock : null,
+                                  text: "Unlock Wallet",
+                                ),
+                                const SizedBox(width: 10),
+                                loading
+                                    ? SizedBox(
+                                        height: 25,
+                                        width: 25,
+                                        child: CircularProgressIndicator(
+                                            value: null,
+                                            backgroundColor: backgroundColor,
+                                            color: textColor,
+                                            strokeWidth: 2),
+                                      )
+                                    : const SizedBox(width: 25),
+                              ])))
+                    ]),
+                  ]),
           )
         ]));
   }
