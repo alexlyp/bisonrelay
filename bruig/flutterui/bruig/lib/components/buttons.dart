@@ -42,6 +42,15 @@ final ButtonStyle emptyButtonStyle = ElevatedButton.styleFrom(
       side: BorderSide(color: Color(0xFF5A5968), width: 2)),
 );
 
+final ButtonStyle readMoreButton = ElevatedButton.styleFrom(
+  padding: const EdgeInsets.only(left: 10, top: 10, right: 10, bottom: 10),
+  foregroundColor: const Color(0xFF8E8D98),
+  //padding: EdgeInsets.symmetric(horizontal: 16),
+  shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(30)),
+      side: BorderSide(color: Color(0xFF5A5968), width: 1)),
+);
+
 class LoadingScreenButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool loading;
@@ -121,5 +130,30 @@ class MobileScreenButton extends StatelessWidget {
         child: Text(text,
             style: const TextStyle(
                 letterSpacing: 1, fontSize: 13, fontWeight: FontWeight.w500)));
+  }
+}
+
+class FeedReadMoreButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final bool loading;
+  final String text;
+  final bool empty;
+  final double minSize;
+  const FeedReadMoreButton(
+      {required this.onPressed,
+      required this.text,
+      this.loading = false,
+      this.empty = false,
+      this.minSize = 0,
+      Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+        style: readMoreButton,
+        onPressed: !loading ? onPressed : null,
+        child:
+            Text(text, style: const TextStyle(letterSpacing: 1, fontSize: 12)));
   }
 }
