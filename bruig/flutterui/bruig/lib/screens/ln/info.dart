@@ -77,8 +77,7 @@ class _LNInfoPageState extends State<LNInfoPage> {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3), color: backgroundColor),
             padding: const EdgeInsets.all(16),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child: ListView(children: [
               Container(
                   decoration: BoxDecoration(
                     color: dividerColor,

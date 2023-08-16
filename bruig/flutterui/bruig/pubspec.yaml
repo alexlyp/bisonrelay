@@ -50,6 +50,7 @@ dependencies:
   open_filex: ^4.3.2
   loading_animation_widget: ^1.2.0
   scrollable_positioned_list: ^0.3.8
+  duration: ^3.0.3
   flutter_markdown:
     git:
       url: https://github.com/tiagoalvesdulce/packages
