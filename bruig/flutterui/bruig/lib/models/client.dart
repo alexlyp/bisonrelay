@@ -167,6 +167,9 @@ class ChatModel extends ChangeNotifier {
   // return the first unread msg index and -1 if there aren't
   // unread msgs
   int firstUnreadIndex() {
+    if (isGC) {
+      return -1;
+    }
     for (int i = 0; i < _msgs.length; i++) {
       if (_msgs[i].firstUnread) {
         return i;
@@ -688,6 +691,22 @@ class ClientModel extends ChangeNotifier {
     _profile = c;
     //c?._setShowProfile(true);
     notifyListeners();
+  }
+
+  void setActiveByNickorOpen(String nick, bool isGC) {
+    try {
+      var c = isGC
+          ? _gcChats.firstWhere((c) => c.nick == nick)
+          : _userChats.firstWhere((c) => c.nick == nick);
+
+      active = c;
+    } on StateError {
+      var c = isGC
+          ? _hiddenGCs.firstWhere((c) => c.nick == nick)
+          : _hiddenUsers.firstWhere((c) => c.nick == nick);
+      startChat(c, false);
+      // Ignore if chat doesn't exist.
+    }
   }
 
   void setActiveByNick(String nick, bool isGC) {

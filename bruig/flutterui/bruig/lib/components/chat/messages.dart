@@ -172,17 +172,11 @@ class _MessagesState extends State<Messages> {
       floatingActionButton: _getFAB(textColor, backgroundColor),
       body: SelectionArea(
         child: ScrollablePositionedList.builder(
-          itemCount: chat.isGC ? chat.dayGCMsgs.length : chat.msgs.length,
+          itemCount: chat.msgs.length,
           physics: const ClampingScrollPhysics(),
-          itemBuilder: chat.isGC
-              ? (context, index) {
-                  return DayGroupedMessages(chat, chat.dayGCMsgs[index], nick,
-                      client, _scrollToBottom);
-                }
-              : (context, index) {
-                  return Event(
-                      chat, chat.msgs[index], nick, client, _scrollToBottom);
-                },
+          itemBuilder: (context, index) {
+            return Event(chat, chat.msgs[index], nick, client, _scrollToBottom);
+          },
           itemScrollController: widget.itemScrollController,
           itemPositionsListener: widget.itemPositionsListener,
         ),
