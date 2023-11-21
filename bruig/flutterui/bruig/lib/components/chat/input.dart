@@ -20,12 +20,19 @@ class Input extends StatefulWidget {
 class _InputState extends State<Input> {
   final controller = TextEditingController();
 
-  final FocusNode node = FocusNode();
+  late FocusNode node;
   List<AttachmentEmbed> embeds = [];
+
+  @override
+  void dispose() {
+    super.dispose();
+    node.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    node = FocusNode();
     controller.text = widget.chat.workingMsg;
   }
 
@@ -37,7 +44,7 @@ class _InputState extends State<Input> {
       controller.text = workingMsg;
       controller.selection = TextSelection(
           baseOffset: workingMsg.length, extentOffset: workingMsg.length);
-      widget.inputFocusNode.requestFocus();
+      //node.requestFocus();
     }
   }
 
@@ -76,6 +83,8 @@ class _InputState extends State<Input> {
   }
 
   void attachFile() async {
+    print(controller.selection.base.offset);
+    //widget.inputFocusNode.unfocus();
     var res = await Navigator.of(context, rootNavigator: true)
         .pushNamed(AttachFileScreen.routeName);
     if (res == null) {
@@ -84,9 +93,16 @@ class _InputState extends State<Input> {
     var embed = res as AttachmentEmbed;
     embeds.add(embed);
     setState(() {
-      controller.text = "${controller.text}${embed.displayString()} ";
+      final selection = controller.selection;
+      final offset = selection.baseOffset;
+      controller.text = controller.text.substring(0, offset) +
+          embed.displayString() +
+          controller.text.substring(offset);
+      print(offset);
+      //controller.
+      //controller.text = "${controller.text} ";
       widget.chat.workingMsg = controller.text;
-      widget.inputFocusNode.requestFocus();
+      //widget.inputFocusNode.requestFocus();
     });
   }
 
@@ -103,7 +119,7 @@ class _InputState extends State<Input> {
               child: Container(
                   margin: const EdgeInsets.only(bottom: 5),
                   child: TextField(
-                    autofocus: true,
+                    //autofocus: true,
                     focusNode: widget.inputFocusNode,
                     style: TextStyle(
                       fontSize: theme.getMediumFont(context),
@@ -142,13 +158,14 @@ class _InputState extends State<Input> {
                       prefixIcon: IconButton(
                           padding: const EdgeInsets.all(0),
                           iconSize: 25,
-                          onPressed: attachFile,
+                          onPressed: () =>
+                              print(controller.selection.base.offset),
                           icon: const Icon(Icons.attach_file)),
                       prefixIconColor: textColor,
                       suffixIcon: IconButton(
                           padding: const EdgeInsets.all(0),
                           iconSize: 25,
-                          onPressed: sendMsg,
+                          onPressed: attachFile,
                           icon: const Icon(Icons.send)),
                       suffixIconColor: textColor,
                     ),
