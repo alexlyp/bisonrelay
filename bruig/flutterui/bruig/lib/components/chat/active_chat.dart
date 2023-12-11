@@ -13,6 +13,7 @@ import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/theme_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:bruig/components/empty_widget.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 class ActiveChat extends StatefulWidget {
   final ClientModel client;
@@ -124,163 +125,170 @@ class _ActiveChatState extends State<ActiveChat> {
     bool isScreenSmall = MediaQuery.of(context).size.width <= 500;
     List<ChatMenuItem> activeSubMenu =
         client.activeSubMenu.whereType<ChatMenuItem>().toList();
-    return Consumer<ThemeNotifier>(
-        builder: (context, theme, _) => isScreenSmall
-            ? activeSubMenu.isNotEmpty
-                ? Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      Column(children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 20, bottom: 20),
-                          child: CircleAvatar(
-                            radius: 75,
-                            backgroundColor: avatarColor,
-                            child: Text(
-                              nickCapitalLetter(),
-                              style: TextStyle(
-                                  color: avatarTextColor, fontSize: 75),
-                            ),
-                          ),
-                        ),
-                        Visibility(
-                          visible: chat.isGC,
-                          child: Text("Group Chat",
-                              style: TextStyle(
-                                  fontSize: theme.getMediumFont(context),
-                                  color: textColor)),
-                        ),
-                        Text(chat.nick,
-                            style: TextStyle(
-                                fontSize: theme.getMediumFont(context),
-                                color: textColor)),
-                        Expanded(
-                            child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: activeSubMenu.length,
-                          itemBuilder: (context, index) => ListTile(
-                              title: Text(activeSubMenu[index].label,
+    return KeyboardDismissOnTap(
+        child: Consumer<ThemeNotifier>(
+            builder: (context, theme, _) => isScreenSmall
+                ? activeSubMenu.isNotEmpty
+                    ? Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          Column(children: [
+                            Container(
+                              margin:
+                                  const EdgeInsets.only(top: 20, bottom: 20),
+                              child: CircleAvatar(
+                                radius: 75,
+                                backgroundColor: avatarColor,
+                                child: Text(
+                                  nickCapitalLetter(),
                                   style: TextStyle(
-                                      fontSize: theme.getSmallFont(context))),
-                              onTap: () {
-                                activeSubMenu[index]
-                                    .onSelected(context, client);
-                                client.hideSubMenu();
-                              },
-                              hoverColor: Colors.black),
-                        )),
-                      ]),
-                      Positioned(
-                        top: 5,
-                        right: 5,
-                        child: Material(
-                          color: selectedBackgroundColor.withOpacity(0),
-                          child: IconButton(
-                            tooltip: "Close",
-                            hoverColor: selectedBackgroundColor,
-                            splashRadius: 15,
-                            iconSize: 15,
-                            onPressed: () => client.hideSubMenu(),
-                            icon: Icon(
-                                color: darkTextColor, Icons.close_outlined),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Column(children: [
-                    Expanded(
-                      child: Messages(chat, client.nick, client,
-                          _itemScrollController, _itemPositionsListener),
-                    ),
-                    Container(
-                        margin: const EdgeInsets.all(10),
-                        child: Input(sendMsg, chat, inputFocusNode))
-                  ])
-            : Row(children: [
-                Expanded(
-                  child: Column(children: [
-                    Expanded(
-                      child: Messages(chat, client.nick, client,
-                          _itemScrollController, _itemPositionsListener),
-                    ),
-                    Container(
-                        padding: const EdgeInsets.all(10),
-                        child: Input(sendMsg, chat, inputFocusNode))
-                  ]),
-                ),
-                Visibility(
-                  visible: activeSubMenu.isNotEmpty,
-                  child: Container(
-                    width: 250,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(width: 2, color: subMenuBorderColor),
-                      ),
-                    ),
-                    child: Stack(alignment: Alignment.topRight, children: [
-                      Column(children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 20, bottom: 20),
-                          child: CircleAvatar(
-                            radius: 75,
-                            backgroundColor: avatarColor,
-                            child: Text(
-                              nickCapitalLetter(),
-                              style: TextStyle(
-                                  color: avatarTextColor, fontSize: 75),
-                            ),
-                          ),
-                        ),
-                        Visibility(
-                          visible: chat.isGC,
-                          child: Text("Group Chat",
-                              style: TextStyle(
-                                  fontSize: theme.getMediumFont(context),
-                                  color: textColor)),
-                        ),
-                        Text(chat.nick,
-                            style: TextStyle(
-                                fontSize: theme.getMediumFont(context),
-                                color: textColor)),
-                        Expanded(
-                            child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: activeSubMenu.length,
-                          itemBuilder: (context, index) => ListTile(
-                              title: Text(activeSubMenu[index].label,
-                                  style: TextStyle(
-                                      fontSize: theme.getSmallFont(context))),
-                              onTap: () {
-                                activeSubMenu[index]
-                                    .onSelected(context, client);
-                                client.hideSubMenu();
-                              },
-                              hoverColor: Colors.black),
-                        )),
-                      ]),
-                      isScreenSmall
-                          ? const Empty()
-                          : Positioned(
-                              top: 5,
-                              right: 5,
-                              child: Material(
-                                color: selectedBackgroundColor.withOpacity(0),
-                                child: IconButton(
-                                  tooltip: "Close",
-                                  hoverColor: selectedBackgroundColor,
-                                  splashRadius: 15,
-                                  iconSize: 15,
-                                  onPressed: () => client.hideSubMenu(),
-                                  icon: Icon(
-                                      color: darkTextColor,
-                                      Icons.close_outlined),
+                                      color: avatarTextColor, fontSize: 75),
                                 ),
                               ),
                             ),
-                    ]),
-                  ),
-                )
-              ]));
+                            Visibility(
+                              visible: chat.isGC,
+                              child: Text("Group Chat",
+                                  style: TextStyle(
+                                      fontSize: theme.getMediumFont(context),
+                                      color: textColor)),
+                            ),
+                            Text(chat.nick,
+                                style: TextStyle(
+                                    fontSize: theme.getMediumFont(context),
+                                    color: textColor)),
+                            Expanded(
+                                child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: activeSubMenu.length,
+                              itemBuilder: (context, index) => ListTile(
+                                  title: Text(activeSubMenu[index].label,
+                                      style: TextStyle(
+                                          fontSize:
+                                              theme.getSmallFont(context))),
+                                  onTap: () {
+                                    activeSubMenu[index]
+                                        .onSelected(context, client);
+                                    client.hideSubMenu();
+                                  },
+                                  hoverColor: Colors.black),
+                            )),
+                          ]),
+                          Positioned(
+                            top: 5,
+                            right: 5,
+                            child: Material(
+                              color: selectedBackgroundColor.withOpacity(0),
+                              child: IconButton(
+                                tooltip: "Close",
+                                hoverColor: selectedBackgroundColor,
+                                splashRadius: 15,
+                                iconSize: 15,
+                                onPressed: () => client.hideSubMenu(),
+                                icon: Icon(
+                                    color: darkTextColor, Icons.close_outlined),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(children: [
+                        Expanded(
+                          child: Messages(chat, client.nick, client,
+                              _itemScrollController, _itemPositionsListener),
+                        ),
+                        Container(
+                            margin: const EdgeInsets.all(10),
+                            child: Input(sendMsg, chat, inputFocusNode))
+                      ])
+                : Row(children: [
+                    Expanded(
+                      child: Column(children: [
+                        Expanded(
+                          child: Messages(chat, client.nick, client,
+                              _itemScrollController, _itemPositionsListener),
+                        ),
+                        Container(
+                            padding: const EdgeInsets.all(10),
+                            child: Input(sendMsg, chat, inputFocusNode))
+                      ]),
+                    ),
+                    Visibility(
+                      visible: activeSubMenu.isNotEmpty,
+                      child: Container(
+                        width: 250,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left:
+                                BorderSide(width: 2, color: subMenuBorderColor),
+                          ),
+                        ),
+                        child: Stack(alignment: Alignment.topRight, children: [
+                          Column(children: [
+                            Container(
+                              margin:
+                                  const EdgeInsets.only(top: 20, bottom: 20),
+                              child: CircleAvatar(
+                                radius: 75,
+                                backgroundColor: avatarColor,
+                                child: Text(
+                                  nickCapitalLetter(),
+                                  style: TextStyle(
+                                      color: avatarTextColor, fontSize: 75),
+                                ),
+                              ),
+                            ),
+                            Visibility(
+                              visible: chat.isGC,
+                              child: Text("Group Chat",
+                                  style: TextStyle(
+                                      fontSize: theme.getMediumFont(context),
+                                      color: textColor)),
+                            ),
+                            Text(chat.nick,
+                                style: TextStyle(
+                                    fontSize: theme.getMediumFont(context),
+                                    color: textColor)),
+                            Expanded(
+                                child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: activeSubMenu.length,
+                              itemBuilder: (context, index) => ListTile(
+                                  title: Text(activeSubMenu[index].label,
+                                      style: TextStyle(
+                                          fontSize:
+                                              theme.getSmallFont(context))),
+                                  onTap: () {
+                                    activeSubMenu[index]
+                                        .onSelected(context, client);
+                                    client.hideSubMenu();
+                                  },
+                                  hoverColor: Colors.black),
+                            )),
+                          ]),
+                          isScreenSmall
+                              ? const Empty()
+                              : Positioned(
+                                  top: 5,
+                                  right: 5,
+                                  child: Material(
+                                    color:
+                                        selectedBackgroundColor.withOpacity(0),
+                                    child: IconButton(
+                                      tooltip: "Close",
+                                      hoverColor: selectedBackgroundColor,
+                                      splashRadius: 15,
+                                      iconSize: 15,
+                                      onPressed: () => client.hideSubMenu(),
+                                      icon: Icon(
+                                          color: darkTextColor,
+                                          Icons.close_outlined),
+                                    ),
+                                  ),
+                                ),
+                        ]),
+                      ),
+                    )
+                  ])));
   }
 }

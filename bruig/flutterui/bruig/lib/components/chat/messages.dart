@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:bruig/models/client.dart';
 import 'package:bruig/components/chat/events.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 /// TODO: make restoreScrollOffset work.
 /// For some reason when trying to use PageStorage the app throws:
@@ -35,6 +36,7 @@ class _MessagesState extends State<Messages> {
   int _maxItem = 0;
   bool _showFAB = false;
   late ChatModel _lastChat;
+  late StreamSubscription<bool> keyboardSubscription;
   Timer? _debounce;
 
   void onChatChanged() {
@@ -71,6 +73,19 @@ class _MessagesState extends State<Messages> {
         }
       });
     });
+    var keyboardVisibilityController = KeyboardVisibilityController();
+    // Query
+    print(
+        'Keyboard visibility direct query: ${keyboardVisibilityController.isVisible}');
+
+    // Subscribe
+    keyboardSubscription =
+        keyboardVisibilityController.onChange.listen((bool visible) {
+      _maybeScrollToFirstUnread();
+      _maybeScrollToBottom();
+      print('Keyboard visibility update. Is visible: $visible');
+    });
+
     chat.addListener(onChatChanged);
     _maybeScrollToFirstUnread();
     _maybeScrollToBottom();
@@ -101,6 +116,7 @@ class _MessagesState extends State<Messages> {
   @override
   dispose() {
     _debounce?.cancel();
+    keyboardSubscription.cancel();
     chat.removeListener(onChatChanged);
     super.dispose();
   }
@@ -180,7 +196,8 @@ class _MessagesState extends State<Messages> {
       floatingActionButton: _getFAB(textColor, backgroundColor),
       body: SelectionArea(
         child: ScrollablePositionedList.builder(
-          itemCount: chat.isGC ? calculateTotalMessageCount() : chat.msgs.length,
+          itemCount:
+              chat.isGC ? calculateTotalMessageCount() : chat.msgs.length,
           physics: const ClampingScrollPhysics(),
           itemBuilder: chat.isGC
               ? (context, index) {
@@ -213,7 +230,8 @@ class _MessagesState extends State<Messages> {
                   return const SizedBox.shrink();
                 }
               : (context, index) {
-                  return Event(chat, chat.msgs[index], nick, client, _scrollToBottom);
+                  return Event(
+                      chat, chat.msgs[index], nick, client, _scrollToBottom);
                 },
           itemScrollController: widget.itemScrollController,
           itemPositionsListener: widget.itemPositionsListener,
