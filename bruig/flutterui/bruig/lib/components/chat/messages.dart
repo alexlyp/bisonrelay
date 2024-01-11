@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:bruig/components/empty_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:bruig/models/client.dart';
 import 'package:bruig/components/chat/events.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 /// TODO: make restoreScrollOffset work.
 /// For some reason when trying to use PageStorage the app throws:
@@ -36,6 +39,7 @@ class _MessagesState extends State<Messages> {
   bool _showFAB = false;
   late ChatModel _lastChat;
   Timer? _debounce;
+  late StreamSubscription<bool> keyboardSubscription;
 
   void onChatChanged() {
     setState(() {});
@@ -75,6 +79,40 @@ class _MessagesState extends State<Messages> {
     _maybeScrollToFirstUnread();
     _maybeScrollToBottom();
     _lastChat = chat;
+    // Query
+    var keyboardVisibilityController = KeyboardVisibilityController();
+    print(
+        'Keyboard visibility direct query: ${keyboardVisibilityController.isVisible}');
+
+    // Subscribe
+    keyboardSubscription =
+        keyboardVisibilityController.onChange.listen((bool visible) {
+      if (_debounce?.isActive ?? false) _debounce!.cancel();
+      _debounce = Timer(const Duration(milliseconds: 50), () {
+        var newMaxItem = widget
+                .itemPositionsListener.itemPositions.value.isNotEmpty
+            ? widget.itemPositionsListener.itemPositions.value
+                .where((ItemPosition position) => position.itemLeadingEdge < 1)
+                .reduce((ItemPosition max, ItemPosition position) =>
+                    position.itemLeadingEdge > max.itemLeadingEdge
+                        ? position
+                        : max)
+                .index
+            : 0;
+        if (mounted && newMaxItem != _maxItem) {
+          _maxItem = newMaxItem;
+          if (_maxItem < chat.msgs.length - 5) {
+            setState(() {
+              _showFAB = true;
+            });
+          } else {
+            setState(() {
+              _showFAB = false;
+            });
+          }
+        }
+      });
+    });
   }
 
   @override
@@ -102,6 +140,7 @@ class _MessagesState extends State<Messages> {
   dispose() {
     _debounce?.cancel();
     chat.removeListener(onChatChanged);
+    keyboardSubscription.cancel();
     super.dispose();
   }
 
@@ -180,7 +219,8 @@ class _MessagesState extends State<Messages> {
       floatingActionButton: _getFAB(textColor, backgroundColor),
       body: SelectionArea(
         child: ScrollablePositionedList.builder(
-          itemCount: chat.isGC ? calculateTotalMessageCount() : chat.msgs.length,
+          itemCount:
+              chat.isGC ? calculateTotalMessageCount() : chat.msgs.length,
           physics: const ClampingScrollPhysics(),
           itemBuilder: chat.isGC
               ? (context, index) {
@@ -213,7 +253,8 @@ class _MessagesState extends State<Messages> {
                   return const SizedBox.shrink();
                 }
               : (context, index) {
-                  return Event(chat, chat.msgs[index], nick, client, _scrollToBottom);
+                  return Event(
+                      chat, chat.msgs[index], nick, client, _scrollToBottom);
                 },
           itemScrollController: widget.itemScrollController,
           itemPositionsListener: widget.itemPositionsListener,
