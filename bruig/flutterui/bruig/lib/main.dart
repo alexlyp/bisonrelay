@@ -58,8 +58,9 @@ void main(List<String> args) async {
   Golib.captureDcrlndLog();
   // DartVLC.initialize();
 
-  // Get user to stop optimizing battery usage
-  OptimizeBattery.stopOptimizingBatteryUsage();
+  // Get user to stop optimizing battery usage on Android.
+  if (Platform.isAndroid) OptimizeBattery.stopOptimizingBatteryUsage();
+
   // The MockGolib was mostly useful during early stages of development.
   //UseMockGolib();
 
