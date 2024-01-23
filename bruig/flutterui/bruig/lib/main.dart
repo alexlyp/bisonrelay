@@ -127,7 +127,7 @@ class _AppState extends State<App> with WindowListener {
     windowManager.addListener(this);
     handleNotifications();
     initClient();
-    windowManager.setPreventClose(true);
+    if (!Platform.isAndroid) windowManager.setPreventClose(true);
   }
 
   @override

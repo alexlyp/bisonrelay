@@ -3,7 +3,7 @@
    <application
         android:name="${applicationName}"
         android:label="bisonrelay"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/app_icon">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
