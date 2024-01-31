@@ -451,7 +451,7 @@ class _ReceivedSentPMMobileState extends State<ReceivedSentMobilePM> {
                                         create: (context) =>
                                             DownloadSource(sourceID),
                                         child: MarkdownArea(
-                                            "${NotificationService().android_notifications_granted} ${NotificationService().in_app_notifications_enabled} ${NotificationService().request_permissions_granted} $msg",
+                                            "${NotificationService().android_notifications_granted} ${NotificationService().in_app_notifications_enabled} ${NotificationService().request_permissions_granted} ${NotificationService().notifications_granted} $msg",
                                             widget.userNick != widget.nick &&
                                                 msg.contains(
                                                     widget.userNick))))),

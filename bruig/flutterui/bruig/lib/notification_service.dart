@@ -30,6 +30,7 @@ class NotificationService {
   bool android_notifications_granted = false;
   bool request_permissions_granted = false;
   bool in_app_notifications_enabled = false;
+  bool notifications_granted = false;
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -116,6 +117,7 @@ class NotificationService {
   }
 
   Future<bool> allowNotifications() async {
+    notifications_granted = _notificationsGranted;
     if (!_notificationsGranted) return false;
     bool notificationsEnabled = false;
     await StorageManager.readData('notifications').then((value) {
