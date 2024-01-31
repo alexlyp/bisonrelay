@@ -170,7 +170,7 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
         create: (context) => DownloadSource(sourceID),
         child: Expanded(
             child: MarkdownArea(
-                "${NotificationService().android_notifications_granted} ${NotificationService().in_app_notifications_enabled} ${NotificationService().request_permissions_granted} $msg",
+                msg,
                 widget.userNick != widget.nick &&
                     msg.contains(widget.userNick))));
     return Consumer<ThemeNotifier>(
@@ -451,7 +451,7 @@ class _ReceivedSentPMMobileState extends State<ReceivedSentMobilePM> {
                                         create: (context) =>
                                             DownloadSource(sourceID),
                                         child: MarkdownArea(
-                                            msg,
+                                            "${NotificationService().android_notifications_granted} ${NotificationService().in_app_notifications_enabled} ${NotificationService().request_permissions_granted} $msg",
                                             widget.userNick != widget.nick &&
                                                 msg.contains(
                                                     widget.userNick))))),
