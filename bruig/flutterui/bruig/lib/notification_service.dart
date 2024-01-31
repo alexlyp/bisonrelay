@@ -27,6 +27,9 @@ class NotificationService {
     return _notificationService;
   }
   bool _notificationsGranted = true;
+  bool android_notifications_granted = false;
+  bool request_permissions_granted = false;
+  bool in_app_notifications_enabled = false;
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -120,6 +123,7 @@ class NotificationService {
         notificationsEnabled = value;
       }
     });
+    in_app_notifications_enabled = notificationsEnabled;
     return notificationsEnabled;
   }
 
@@ -286,6 +290,7 @@ class NotificationService {
         granted = await Permission.notification.request().isGranted;
       }
       _notificationsGranted = granted;
+      android_notifications_granted = granted;
       return granted;
     }
     return true;
@@ -316,7 +321,7 @@ class NotificationService {
 
       final bool? grantedNotificationPermission =
           await androidImplementation?.requestNotificationsPermission();
-
+      request_permissions_granted = grantedNotificationPermission ?? false;
       _notificationsGranted = grantedNotificationPermission ?? false;
     }
   }

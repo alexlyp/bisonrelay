@@ -22,6 +22,7 @@ import 'package:bruig/components/user_context_menu.dart';
 import 'package:bruig/components/empty_widget.dart';
 import 'package:bruig/util.dart';
 import 'package:bruig/theme_manager.dart';
+import 'package:bruig/notification_service.dart';
 
 class ServerEvent extends StatelessWidget {
   final Widget child;
@@ -169,7 +170,7 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
         create: (context) => DownloadSource(sourceID),
         child: Expanded(
             child: MarkdownArea(
-                msg,
+                "${NotificationService().android_notifications_granted} ${NotificationService().in_app_notifications_enabled} ${NotificationService().request_permissions_granted} $msg",
                 widget.userNick != widget.nick &&
                     msg.contains(widget.userNick))));
     return Consumer<ThemeNotifier>(
