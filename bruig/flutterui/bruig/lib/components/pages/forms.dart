@@ -14,8 +14,8 @@ import 'package:flutter/services.dart';
 class _FormSubmitButton extends StatelessWidget {
   final FormElement form;
   final _FormField submit;
-  final GlobalKey<FormState> formKey;
-  const _FormSubmitButton(this.form, this.submit, this.formKey);
+  final bool isValidated;
+  const _FormSubmitButton(this.form, this.submit, this.isValidated);
 
   void doSubmit(BuildContext context, FormElement form) async {
     var snackbar = SnackBarModel.of(context);
@@ -56,11 +56,7 @@ class _FormSubmitButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-        onPressed: () {
-          if (formKey.currentState!.validate()) {
-            doSubmit(context, form);
-          }
-        },
+        onPressed: isValidated ? () => doSubmit(context, form) : null,
         child: Text(submit.label));
   }
 }
@@ -92,7 +88,18 @@ class CustomForm extends StatefulWidget {
 
 class CustomFormState extends State<CustomForm> {
   final _formKey = GlobalKey<FormState>();
+  Map<bool> ValidatedFields;
+  AutovalidateMode _autoValidate = AutovalidateMode.disabled;
   FormElement get form => widget.form;
+
+  void _validateInputs() {
+    if (_formKey.currentState!.validate()) {
+      isValidated = true;
+    } else {
+      isValidated = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     _FormField? submit;
@@ -106,27 +113,27 @@ class CustomFormState extends State<CustomForm> {
             ctrl.text = field.value;
           }
           fieldWidgets.add(TextFormField(
-              controller: ctrl,
-              decoration: InputDecoration(
-                hintText: field.hint,
-                labelText: field.label,
-              ),
-              onSaved: (String? value) {
-                // This optional block of code can be used to run
-                // code when the user saves the form.
-              },
-              validator: (String? value) {
-                if (value != null && field.regexp != "") {
-                  return RegExp(field.regexp).hasMatch(value)
-                      ? null
-                      : field.regexpstr;
-                }
-                return null;
-              },
-              onChanged: (String val) {
-                field.value = val;
-                _formKey.currentState!.validate();
-              }));
+            controller: ctrl,
+            decoration: InputDecoration(
+              hintText: field.hint,
+              labelText: field.label,
+            ),
+            onSaved: (String? value) {
+              // This optional block of code can be used to run
+              // code when the user saves the form.
+            },
+            validator: (String? value) {
+              if (value != null && field.regexp != "") {
+                return RegExp(field.regexp).hasMatch(value)
+                    ? null
+                    : field.regexpstr;
+              }
+              return null;
+            },
+            onChanged: (String val) {
+              field.value = val;
+            },
+          ));
 
           break;
         case "intinput":
@@ -157,7 +164,10 @@ class CustomFormState extends State<CustomForm> {
                 return RegExp(field.regexp).hasMatch(value)
                     ? null
                     : field.regexpstr;
+              } else if (value != null && value == "") {
+                return "This field is required";
               }
+              _validateInputs();
               return null;
             },
           ));
@@ -176,12 +186,13 @@ class CustomFormState extends State<CustomForm> {
     // Build a Form widget using the _formKey created above.
     return Form(
       key: _formKey,
+      autovalidateMode: AutovalidateMode.always,
       child: Column(
         children: <Widget>[
           ...fieldWidgets,
           const SizedBox(height: 10),
           submit != null
-              ? _FormSubmitButton(form, submit, _formKey)
+              ? _FormSubmitButton(form, submit, isValidated)
               : const Empty(),
           // Add TextFormFields and ElevatedButton here.
         ],
