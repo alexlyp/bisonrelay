@@ -26,7 +26,9 @@ import (
 	"github.com/companyzero/bisonrelay/rpc"
 	rtdtclient "github.com/companyzero/bisonrelay/rtdt/client"
 	"github.com/companyzero/bisonrelay/zkidentity"
+	"github.com/decred/dcrd/dcrutil/v4"
 	"github.com/decred/slog"
+	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
@@ -438,6 +440,10 @@ type Client struct {
 	rtReHotAudio   *liveRTDTSession // Set when sending errored and attempting to re-connect.
 	rtCapStream    *audio.CaptureStream
 	rtCloseCapChan chan interface{}
+
+	// store variables.
+	ordersMtx             sync.Mutex
+	pendingPurchaseOrders map[string]dcrutil.Amount
 }
 
 // New creates a new CR client with the given config.
@@ -553,6 +559,8 @@ func New(cfg Config) (*Client, error) {
 
 		noterec:        noterec,
 		rtLiveSessions: make(map[zkidentity.ShortID]*liveRTDTSession),
+
+		pendingPurchaseOrders: make(map[string]dcrutil.Amount),
 	}
 
 	c.rtc, err = rtdtclient.New(
@@ -1072,6 +1080,63 @@ func (c *Client) UserLogNick(uid UserID) string {
 func (c *Client) NicksWithPrefix(prefix string) []string {
 	<-c.abLoaded
 	return c.rul.nicksWithPrefix(prefix)
+}
+
+func (c *Client) PurchaseOrderAck(id string) (dcrutil.Amount, error) {
+	c.ordersMtx.Lock()
+	defer c.ordersMtx.Unlock()
+
+	total, ok := c.pendingPurchaseOrders[id]
+	if !ok {
+		return 0, fmt.Errorf("no such purchase order id")
+	}
+	delete(c.pendingPurchaseOrders, id)
+
+	return total, nil
+}
+
+func (c *Client) PurchaseOrderRequest(uid UserID, payType string, items []rpc.RMPurchaseOrderItem, usdPrice float64) error {
+	if payType == "" {
+		return fmt.Errorf("paytype not set")
+	}
+	if len(items) == 0 {
+		return fmt.Errorf("no items specified")
+	}
+
+	for i := range items {
+		if items[i].SKU == "" {
+			return fmt.Errorf("item is missing sku")
+		}
+		if items[i].Quantity <= 0 {
+			return fmt.Errorf("item quantity for sku %q not set", items[i].SKU)
+		}
+	}
+
+	dcrPriceF, _ := c.rates.Get()
+	if dcrPriceF <= 0 {
+		return fmt.Errorf("invalid dcr price: %v", dcrPriceF)
+	}
+	dcrPrice, err := dcrutil.NewAmount(dcrPriceF)
+	if err != nil {
+		return fmt.Errorf("failed to generate DCR price: %w", err)
+	}
+
+	ru, err := c.rul.byID(uid)
+	if err != nil {
+		return err
+	}
+
+	// generate an invoice id
+	id := uuid.NameSpaceOID.String()
+
+	if err = ru.sendPurchaseOrderRequest(id, payType, items); err != nil {
+		return err
+	}
+	c.ordersMtx.Lock()
+	c.pendingPurchaseOrders[id] = dcrPrice.MulF64(usdPrice)
+	c.ordersMtx.Unlock()
+
+	return nil
 }
 
 // PM sends a private message to the given user, identified by its public id.
