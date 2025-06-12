@@ -3,6 +3,7 @@ import 'dart:io';
 // import 'package:dart_vlc/dart_vlc.dart' as vlc;
 import 'package:bruig/components/context_menu.dart';
 import 'package:bruig/components/pages/forms.dart';
+import 'package:bruig/components/pages/style.dart';
 import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/text_dialog.dart';
 import 'package:bruig/components/audio_element.dart';
@@ -356,6 +357,7 @@ class MarkdownAreaModel extends ChangeNotifier {
     "image": ImageMarkdownElementBuilder(),
     "download": DownloadLinkElementBuilder(),
     "form": FormElementBuilder(),
+    "style": StyleElementBuilder(),
     "lnpay": _LNPayURLElementBuilder(),
     "avif": AVIFElementBuilder(),
   };
@@ -363,8 +365,9 @@ class MarkdownAreaModel extends ChangeNotifier {
   final List<md.InlineSyntax> inlineSyntaxes = [
     LnpayURLSyntax(),
   ];
-  final List<FormBlockSyntax> blockSyntaxes = [
+  final List<md.BlockSyntax> blockSyntaxes = [
     FormBlockSyntax(),
+    StyleBlockSyntax()
   ];
 
   MarkdownAreaModel(String dbroot) {

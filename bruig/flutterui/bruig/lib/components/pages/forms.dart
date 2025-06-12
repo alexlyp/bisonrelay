@@ -77,7 +77,6 @@ class FormElementBuilder extends MarkdownElementBuilder {
       return const Text("not-a-form-element",
           style: TextStyle(color: Colors.amber));
     }
-
     FormElement form = element;
     return CustomForm(form);
   }
