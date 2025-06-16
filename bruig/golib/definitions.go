@@ -38,6 +38,10 @@ type initClient struct {
 	SimpleStoreAccount    string  `json:"simplestore_account"`
 	SimpleStoreShipCharge float64 `json:"simplestore_ship_charge"`
 
+	FlixPayType    string  `json:"flix_pay_type"`
+	FlixAccount    string  `json:"flix_account"`
+	FlixShipCharge float64 `json:"flix_ship_charge"`
+
 	ProxyAddr     string `json:"proxyaddr"`
 	ProxyUsername string `json:"proxy_username"`
 	ProxyPassword string `json:"proxy_password"`

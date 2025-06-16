@@ -77,6 +77,19 @@ func (sspt simpleStorePayType) isValid() bool {
 		(sspt == ssPayTypeOnChain)
 }
 
+type flixPayType string
+
+const (
+	fPayTypeNone    flixPayType = ""
+	fPayTypeLN      flixPayType = "ln"
+	fPayTypeOnChain flixPayType = "onchain"
+)
+
+func (fpt flixPayType) isValid() bool {
+	return (fpt == fPayTypeNone) || (fpt == fPayTypeLN) ||
+		(fpt == fPayTypeOnChain)
+}
+
 type config struct {
 	ServerAddr        string
 	Root              string
@@ -156,6 +169,10 @@ type config struct {
 	SimpleStorePayType    simpleStorePayType
 	SimpleStoreAccount    string
 	SimpleStoreShipCharge float64
+
+	FlixPayType    flixPayType
+	FlixAccount    string
+	FlixShipCharge float64
 
 	RTAutoHotAudio bool
 
@@ -365,6 +382,11 @@ func loadConfig() (*config, error) {
 	flagSimpleStoreAccount := fs.String("simplestore.account", "", "Account to use for on-chain adresses")
 	flagSimpleStoreShipCharge := fs.Float64("simplestore.shipcharge", 0, "How much to charge for s&h")
 
+	// flix
+	flagFlixPayType := fs.String("simplestore.paytype", "", "How to charge for paystore purchases")
+	flagFlixAccount := fs.String("simplestore.account", "", "Account to use for on-chain adresses")
+	flagFlixShipCharge := fs.Float64("simplestore.shipcharge", 0, "How much to charge for s&h")
+
 	// Load config from file.
 	parser := flagfile.Parser{
 		ParseSections: true,
@@ -494,6 +516,12 @@ func loadConfig() (*config, error) {
 			ssPayType)
 	}
 
+	fPayType := flixPayType(*flagFlixPayType)
+	if !ssPayType.isValid() {
+		return nil, fmt.Errorf("invalid flix payment type %q",
+			ssPayType)
+	}
+
 	var d net.Dialer
 	dialFunc := d.DialContext
 	if *flagProxyAddr != "" {
@@ -603,6 +631,10 @@ func loadConfig() (*config, error) {
 		SimpleStorePayType:    ssPayType,
 		SimpleStoreAccount:    *flagSimpleStoreAccount,
 		SimpleStoreShipCharge: *flagSimpleStoreShipCharge,
+
+		FlixPayType:    fPayType,
+		FlixAccount:    *flagFlixAccount,
+		FlixShipCharge: *flagFlixShipCharge,
 
 		RTAutoHotAudio: *flagRTAudioHotAudio,
 

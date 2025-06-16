@@ -178,7 +178,7 @@ func (db *DB) StoreFetchedResource(tx ReadWriteTx, uid UserID, tag rpc.ResourceT
 		// Setup the overview of the bundle.
 		sess.initBundledResponse(uid, fr.PageID)
 
-		db.log.Debugf("Processing response bundle with %d pages", len(bundle.Resources))
+		db.log.Infof("Processing response bundle with %d pages", len(bundle.Resources))
 
 		// Find the response FR for the original request path within
 		// the bundle.

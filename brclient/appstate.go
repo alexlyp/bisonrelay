@@ -33,6 +33,7 @@ import (
 	"github.com/companyzero/bisonrelay/client/clientdb"
 	"github.com/companyzero/bisonrelay/client/clientintf"
 	"github.com/companyzero/bisonrelay/client/resources"
+	"github.com/companyzero/bisonrelay/client/resources/flix"
 	"github.com/companyzero/bisonrelay/client/resources/simplestore"
 	"github.com/companyzero/bisonrelay/client/rpcserver"
 	"github.com/companyzero/bisonrelay/clientrpc/types"
@@ -233,6 +234,11 @@ type appState struct {
 	ssPayType    simpleStorePayType
 	ssAcct       string
 	ssShipCharge float64
+
+	fstore      *flix.Store
+	fPayType    flixPayType
+	fAcct       string
+	fShipCharge float64
 
 	noterec        *audio.NoteRecorder
 	rtAutoHotAudio bool
@@ -4031,6 +4037,7 @@ func newAppState(sendMsg func(tea.Msg), lndLogLines *sloglinesbuffer.Buffer,
 
 	// Initialize resources router.
 	var sstore *simplestore.Store
+	var fstore *flix.Store
 	resRouter := resources.NewRouter()
 
 	// Initialize client config.
@@ -4417,10 +4424,47 @@ func newAppState(sendMsg func(tea.Msg), lndLogLines *sloglinesbuffer.Buffer,
 		strings.HasPrefix(args.ResourcesUpstream, "https://"):
 		p := resources.NewHttpProvider(args.ResourcesUpstream)
 		resRouter.BindPrefixPath([]string{}, p)
+	case strings.HasPrefix(args.ResourcesUpstream, "flix:"):
+		// Generate the template store if the path does not exist.
+		path := args.ResourcesUpstream[len("flix:"):]
+		err := flix.WriteTemplate(path)
+		if err != nil && !errors.Is(err, os.ErrExist) {
+			return nil, fmt.Errorf("unable to write flix"+
+				" template: %v", err)
+		}
+
+		fcfg := flix.Config{
+			Root:        path,
+			Log:         logBknd.logger("FSTR"),
+			LiveReload:  true, // FIXME: parametrize
+			Client:      c,
+			PayType:     flix.PayType(args.FlixPayType),
+			Account:     args.FlixAccount,
+			ShipCharge:  args.FlixShipCharge,
+			LNPayClient: lnPC,
+
+			ExchangeRateProvider: func() float64 {
+				dcrPrice, _ := as.c.Rates().Get()
+				return dcrPrice
+			},
+
+			OrderPlaced: func(order *flix.Order, msg string) {
+				handleCompletedFlixOrder(as, order, msg)
+			},
+
+			StatusChanged: func(order *flix.Order, msg string) {
+				handleFlixOrderStatusChanged(as, order, msg)
+			},
+		}
+		fstore, err = flix.New(fcfg)
+		if err != nil {
+			return nil, fmt.Errorf("unable to initialize flix: %v", err)
+		}
+		resRouter.BindPrefixPath([]string{}, fstore)
 	case strings.HasPrefix(args.ResourcesUpstream, "simplestore:"):
 		// Generate the template store if the path does not exist.
 		path := args.ResourcesUpstream[len("simplestore:"):]
-		err := simplestore.WriteTemplate(path)
+		err := flix.WriteTemplate(path)
 		if err != nil && !errors.Is(err, os.ErrExist) {
 			return nil, fmt.Errorf("unable to write simplestore"+
 				" template: %v", err)
@@ -4431,9 +4475,9 @@ func newAppState(sendMsg func(tea.Msg), lndLogLines *sloglinesbuffer.Buffer,
 			Log:         logBknd.logger("SSTR"),
 			LiveReload:  true, // FIXME: parametrize
 			Client:      c,
-			PayType:     simplestore.PayType(args.SimpleStorePayType),
-			Account:     args.SimpleStoreAccount,
-			ShipCharge:  args.SimpleStoreShipCharge,
+			PayType:     simplestore.PayType(args.FlixPayType),
+			Account:     args.FlixAccount,
+			ShipCharge:  args.FlixShipCharge,
 			LNPayClient: lnPC,
 
 			ExchangeRateProvider: func() float64 {
@@ -4526,6 +4570,11 @@ func newAppState(sendMsg func(tea.Msg), lndLogLines *sloglinesbuffer.Buffer,
 		ssPayType:    args.SimpleStorePayType,
 		ssAcct:       args.SimpleStoreAccount,
 		ssShipCharge: args.SimpleStoreShipCharge,
+
+		fstore:      fstore,
+		fPayType:    args.FlixPayType,
+		fAcct:       args.FlixAccount,
+		fShipCharge: args.FlixShipCharge,
 
 		rtJoinAttempts: make(map[zkidentity.ShortID]struct{}),
 		rtSessions:     orderedmap.New[zkidentity.ShortID, *rtdtSession](),
