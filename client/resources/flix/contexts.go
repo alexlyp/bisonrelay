@@ -7,15 +7,14 @@ import (
 )
 
 type indexContext struct {
-	Shows   map[string]*Show
-	Movies  map[string]*Movie
+	Shows   map[string]*Content
+	Movies  map[string]*Content
 	IsAdmin bool
 }
 
 type addToCartContext struct {
-	Show  *Show
-	Movie *Movie
-	Cart  *Cart
+	Content *Content
+	Cart    *Cart
 }
 
 type orderContext struct {

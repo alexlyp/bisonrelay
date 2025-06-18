@@ -9,8 +9,9 @@ import (
 	"github.com/decred/dcrd/dcrutil/v4"
 )
 
-type Show struct {
+type Content struct {
 	Title        string   `json:"title"`
+	Type         string   `json:"type"`
 	SKU          string   `json:"sku"`
 	Description  string   `json:"description"`
 	Tags         []string `json:"tags"`
@@ -25,13 +26,16 @@ type Show struct {
 }
 
 type showsFile struct {
-	Shows []*Show
+	Shows []*Content
+}
+
+type moviesFile struct {
+	Movies []*Content
 }
 
 type CartItem struct {
-	Show     *Show  `json:"show"`
-	Movie    *Movie `json:"movie"`
-	Quantity uint32 `json:"quantity"`
+	Content  *Content `json:"content"`
+	Quantity uint32   `json:"quantity"`
 }
 
 type Cart struct {
@@ -42,7 +46,7 @@ type Cart struct {
 // HasCharges returns true if at least one item has a positive charge amount.
 func (cart *Cart) HasCharges() bool {
 	for _, item := range cart.Items {
-		if item.Quantity > 0 && item.Show.Price > 0 {
+		if item.Quantity > 0 && item.Content.Price > 0 {
 			return true
 		}
 	}
@@ -54,7 +58,7 @@ func (cart *Cart) HasCharges() bool {
 func (cart *Cart) TotalCents() int64 {
 	var totalUSDCents int64
 	for _, item := range cart.Items {
-		totalItemUSDCents := int64(item.Quantity) * int64(item.Show.Price*100)
+		totalItemUSDCents := int64(item.Quantity) * int64(item.Content.Price*100)
 		totalUSDCents += totalItemUSDCents
 	}
 	return totalUSDCents
@@ -108,19 +112,20 @@ type OrderComment struct {
 }
 
 type Order struct {
-	ID           OrderID           `json:"id"`
-	User         clientintf.UserID `json:"user"`
-	Cart         Cart              `json:"cart"`
-	Status       OrderStatus       `json:"status"`
-	PlacedTS     time.Time         `json:"placed_ts"`
-	ResolvedTS   *time.Time        `json:"resolved_ts"`
-	ShipCharge   float64           `json:"ship_charge"`
-	ExchangeRate float64           `json:"exchange_rate"`
-	PayType      PayType           `json:"pay_type"`
-	Invoice      string            `json:"invoice"`
-	ShipAddr     *ShippingAddress  `json:"shipping"`
-	Comments     []OrderComment    `json:"comments"`
-	ExpiresTS    time.Time         `json:"expires_ts"`
+	ID              OrderID           `json:"id"`
+	User            clientintf.UserID `json:"user"`
+	Cart            Cart              `json:"cart"`
+	Status          OrderStatus       `json:"status"`
+	PlacedTS        time.Time         `json:"placed_ts"`
+	ResolvedTS      *time.Time        `json:"resolved_ts"`
+	ShipCharge      float64           `json:"ship_charge"`
+	ExchangeRate    float64           `json:"exchange_rate"`
+	PayType         PayType           `json:"pay_type"`
+	Invoice         string            `json:"invoice"`
+	ShipAddr        *ShippingAddress  `json:"shipping"`
+	Comments        []OrderComment    `json:"comments"`
+	ExpiresTS       time.Time         `json:"expires_ts"`
+	PurchaseOrderID string            `json:"poid"`
 }
 
 // Total returns the total amount, with 2 decimal places accuracy.

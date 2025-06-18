@@ -85,8 +85,8 @@ type Store struct {
 	chainParams *chaincfg.Params
 
 	mtx    sync.Mutex
-	movies map[string]*Movie
-	shows  map[string]*Show
+	movies map[string]*Content
+	shows  map[string]*Content
 	tmpl   *template.Template
 
 	invoiceSettledChan  chan string
@@ -107,8 +107,8 @@ func New(cfg Config) (*Store, error) {
 		c:         cfg.Client,
 		log:       log,
 		root:      cfg.Root,
-		movies:    make(map[string]*Movie),
-		shows:     make(map[string]*Show),
+		movies:    make(map[string]*Content),
+		shows:     make(map[string]*Content),
 		tmpl:      template.New("*root"),
 		lnpc:      cfg.LNPayClient,
 		runCtx:    runCtx,
@@ -127,8 +127,8 @@ func New(cfg Config) (*Store, error) {
 
 func (s *Store) reloadStore() error {
 	// Reset.
-	movies := make(map[string]*Movie, len(s.movies))
-	shows := make(map[string]*Show, len(s.shows))
+	movies := make(map[string]*Content, len(s.movies))
+	shows := make(map[string]*Content, len(s.shows))
 	tmpl := template.New("*root")
 
 	// Parse templates.
@@ -493,8 +493,8 @@ func (s *Store) invoiceSettled(ctx context.Context, order *Order) {
 
 	// If the order has files attached to it, send them to the user.
 	for _, item := range order.Cart.Items {
-		fname := item.Show.SendFilename
-		if item.Show.SendFilename == "" {
+		fname := item.Content.SendFilename
+		if item.Content.SendFilename == "" {
 			continue
 		}
 
