@@ -60,6 +60,7 @@ func (s *Store) handleBundle(ctx context.Context, uid clientintf.UserID,
 		Movies:  s.movies,
 		IsAdmin: uid == s.c.PublicID(),
 	}
+
 	w := &bytes.Buffer{}
 	err := s.tmpl.ExecuteTemplate(w, indexTmplFile, tmplCtx)
 	s.mtx.Unlock()

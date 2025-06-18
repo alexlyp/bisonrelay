@@ -203,7 +203,7 @@ func (s *Store) reloadStore() error {
 	movieDirs := filepath.Join(s.root, moviesDir)
 	movieFiles, err := os.ReadDir(movieDirs)
 	if err != nil {
-		return fmt.Errorf("unable to list show files: %v", err)
+		return fmt.Errorf("unable to list movies files: %v", err)
 	}
 
 	for _, movieFile := range movieFiles {
@@ -221,7 +221,7 @@ func (s *Store) reloadStore() error {
 		err = dec.Decode(&movieFile)
 		_ = f.Close()
 		if err != nil {
-			return fmt.Errorf("unable to decode product file %s: %v",
+			return fmt.Errorf("unable to decode movie file %s: %v",
 				fname, err)
 		}
 		for _, movie := range movieFile.Movies {
@@ -230,7 +230,7 @@ func (s *Store) reloadStore() error {
 			}
 
 			if _, ok := movies[movie.SKU]; ok {
-				return fmt.Errorf("product with duplicated SKU %s in %s",
+				return fmt.Errorf("movie with duplicated SKU %s in %s",
 					movie.SKU, fname)
 			}
 
@@ -270,7 +270,6 @@ func (s *Store) Fulfill(ctx context.Context, uid clientintf.UserID,
 			return s.handleNotFound(ctx, uid, request)
 		}
 	}
-	fmt.Println(request.Path)
 	switch {
 	case len(request.Path) == 0 || request.Path[0] == "index.md":
 		return s.handleBundle(ctx, uid, request)

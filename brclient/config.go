@@ -383,9 +383,9 @@ func loadConfig() (*config, error) {
 	flagSimpleStoreShipCharge := fs.Float64("simplestore.shipcharge", 0, "How much to charge for s&h")
 
 	// flix
-	flagFlixPayType := fs.String("simplestore.paytype", "", "How to charge for paystore purchases")
-	flagFlixAccount := fs.String("simplestore.account", "", "Account to use for on-chain adresses")
-	flagFlixShipCharge := fs.Float64("simplestore.shipcharge", 0, "How much to charge for s&h")
+	flagFlixPayType := fs.String("flix.paytype", "", "How to charge for flix purchases")
+	flagFlixAccount := fs.String("flix.account", "", "Account to use for on-chain adresses")
+	flagFlixShipCharge := fs.Float64("flix.shipcharge", 0, "How much to charge for s&h")
 
 	// Load config from file.
 	parser := flagfile.Parser{
@@ -434,6 +434,10 @@ func loadConfig() (*config, error) {
 		path := (*flagResourcesUpstream)[len("simplestore:"):]
 		path = expandPath(homeDir, path)
 		*flagResourcesUpstream = "simplestore:" + path
+	case strings.HasPrefix(*flagResourcesUpstream, "flix:"):
+		path := (*flagResourcesUpstream)[len("flix:"):]
+		path = expandPath(homeDir, path)
+		*flagResourcesUpstream = "flix:" + path
 	default:
 		return nil, fmt.Errorf("unknown resources upstream provider %q", *flagResourcesUpstream)
 

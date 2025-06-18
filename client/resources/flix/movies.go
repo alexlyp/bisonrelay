@@ -9,6 +9,10 @@ type Movie struct {
 	Disabled     bool     `json:"disabled,omitempty"`
 	Shipping     bool     `json:"shipping"`
 	SendFilename string   `json:"send_filename"`
+	Genre        string   `json:"genre"`
+	ReleaseDate  string   `json:"release_date"`
+	PosterPath   string   `json:"poster_path"`
+	PosterEmbed  string   `json:"poster_embed"`
 }
 
 type moviesFile struct {
