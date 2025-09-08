@@ -43,6 +43,27 @@ class ServerEvent extends StatelessWidget {
   }
 }
 
+class InstantCall extends StatelessWidget {
+  final InstantCallEvent event;
+  const InstantCall({required this.event, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    var state = "";
+    if (event.state == ICE_starting) {
+      state = "started";
+    } else if (event.state == ICE_finished) {
+      state = "ended";
+    }
+    return Container(
+        padding: const EdgeInsets.only(top: 5, bottom: 5),
+        margin: const EdgeInsets.all(5),
+        alignment: Alignment.center,
+        child: Text(
+            textAlign: TextAlign.center, "You $state a call at: ${event.msg}"));
+  }
+}
+
 class DateChange extends StatelessWidget {
   final DateChangeEvent event;
   const DateChange({required this.event, super.key});
@@ -1170,6 +1191,17 @@ class Event extends StatelessWidget {
   openReplyDM(bool isGC, String id) => client.setActiveByNick(id, isGC);
   @override
   Widget build(BuildContext context) {
+    if (event.event is InstantCallEvent) {
+      // return Row(
+      //     crossAxisAlignment: CrossAxisAlignment.center,
+      //     mainAxisAlignment: MainAxisAlignment.center,
+      //     children: [
+      //       DateChange(
+      //           child: Center(
+      //               child: Text(textAlign: TextAlign.center, event.event.msg)))
+      //     ]);
+      return InstantCall(event: event.event as InstantCallEvent);
+    }
     if (event.event is DateChangeEvent) {
       // return Row(
       //     crossAxisAlignment: CrossAxisAlignment.center,

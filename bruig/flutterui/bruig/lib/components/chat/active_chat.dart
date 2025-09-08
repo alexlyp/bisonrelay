@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/chat/chat_side_menu.dart';
 import 'package:bruig/components/chat/record_audio.dart';
 import 'package:bruig/components/chat/rtc_session_header.dart';
@@ -41,6 +42,7 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
   CustomInputFocusNode get inputFocusNode => widget.inputFocusNode;
   ChatModel? chat;
   RTDTSessionModel? rtcSession;
+  RTDTSessionModel? currentInstantSession;
   late ItemScrollController _itemScrollController;
   late ItemPositionsListener _itemPositionsListener;
   Timer? _debounce;
@@ -51,6 +53,7 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
       setState(() {
         chat = newChat;
         rtcSession = rtc.gcSession(newChat?.id ?? "");
+        currentInstantSession = chat?.currentSessions(newChat?.id ?? "");
       });
     }
   }
@@ -134,6 +137,12 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
         rtcSession = newRtcSess;
       });
     }
+    var newInstantSession = chat?.currentSessions(chat?.id ?? "");
+    if (newInstantSession != currentInstantSession) {
+      setState(() {
+        currentInstantSession = newInstantSession;
+      });
+    }
   }
 
   @override
@@ -150,6 +159,7 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
     _itemPositionsListener = ItemPositionsListener.create();
     chat = client.active;
     rtcSession = rtc.gcSession(chat?.id ?? "");
+    currentInstantSession = chat?.currentSessions(chat?.id ?? "");
     client.activeChat.addListener(activeChatChanged);
     ui.showProfile.addListener(showProfileChanged);
     ui.chatSideMenuActive.addListener(chatSideMenuActiveChanged);
@@ -178,6 +188,12 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
     } else if (client.active != chat) {
       activeChatChanged();
     }
+
+    // Fix this so it doesn't fire every update?
+    var newInstantSession = chat?.currentSessions(chat?.id ?? "");
+    setState(() {
+      currentInstantSession = newInstantSession;
+    });
 
     if (oldWidget.rtc != rtc) {
       oldWidget.rtc.removeListener(rtcSessionsChanged);
@@ -215,12 +231,21 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
         client,
         Column(
           children: [
+            if (currentInstantSession != null)
+              Box(
+                color: SurfaceColor.primaryContainer,
+                margin: const EdgeInsets.only(bottom: 5),
+                padding: const EdgeInsets.all(5),
+                child: RTCSessionHeader(
+                    rtc, currentInstantSession!, widget.audio, client, true),
+              ),
             if (rtcSession != null)
               Box(
                 color: SurfaceColor.primaryContainer,
                 margin: const EdgeInsets.only(bottom: 5),
                 padding: const EdgeInsets.all(5),
-                child: RTCSessionHeader(rtc, rtcSession!, widget.audio),
+                child: RTCSessionHeader(
+                    rtc, rtcSession!, widget.audio, client, false),
               ),
             Expanded(
               child: Stack(children: [
