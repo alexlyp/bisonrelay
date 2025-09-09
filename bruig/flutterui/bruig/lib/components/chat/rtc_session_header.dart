@@ -38,12 +38,14 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
   void leaveLiveSession() async {
     try {
       await rtc.leaveLiveSession(session);
-      if (session.isInstant) {
-        for (var m in session.info.members) {
-          var cm = client.getExistingChat(m.uid);
-          cm?.finishInstantCall();
+      setState(() {
+        if (session.isInstant) {
+          for (var m in session.info.members) {
+            var cm = client.getExistingChat(m.uid);
+            cm?.finishInstantCall();
+          }
         }
-      }
+      });
     } catch (exception) {
       showErrorSnackbar(this, "Unable to leave session: $exception");
     }
@@ -93,12 +95,14 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
   void doDissolveSess() async {
     try {
       await rtc.dissolveSession(session.sessionRV);
-      if (session.isInstant) {
-        for (var m in session.info.members) {
-          var cm = client.getExistingChat(m.uid);
-          cm?.finishInstantCall();
+      setState(() {
+        if (session.isInstant) {
+          for (var m in session.info.members) {
+            var cm = client.getExistingChat(m.uid);
+            cm?.finishInstantCall();
+          }
         }
-      }
+      });
       showSuccessSnackbar(this, "Dissolved session ${session.sessionShortRV}");
     } catch (exception) {
       showErrorSnackbar(this, "Unable to dissolve session: $exception");

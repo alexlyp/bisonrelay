@@ -37,6 +37,7 @@ class _InstantCallModalState extends State<InstantCallModal> {
     setState(() => loading = true);
     try {
       var currentInstantSession = await rtc.createInstantSession([chat.id]);
+      // Starting instant call
       chat.startInstantCall(currentInstantSession);
       if (mounted) {
         Navigator.of(context).pop();

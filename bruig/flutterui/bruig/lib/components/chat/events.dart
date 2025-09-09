@@ -1159,17 +1159,6 @@ class _RTDTInviteWState extends State<RTDTInviteW> {
     }
 
     if (rtc.isInviteAccepted(event)) {
-      print("invite is accepted");
-      for (var session in rtc.sessions) {
-        if (session.isInstant &&
-            session.sessionRV == event.invite.rv &&
-            chat.currentSessions(chat.id) == null &&
-            !acceptingInvite) {
-          chat.startInstantCall(session);
-          break;
-        }
-      }
-
       return const ServerEvent(msg: "Accepted realtime chat invite");
     }
 
