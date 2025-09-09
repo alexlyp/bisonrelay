@@ -393,7 +393,6 @@ class ChatModel extends ChangeNotifier {
     _hasInstantCall = true;
 
     _currentSessions[id] = currentSession!;
-    print("notifying listeners");
     notifyListeners();
   }
 

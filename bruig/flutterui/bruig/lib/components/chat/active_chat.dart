@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bruig/components/interactive_avatar.dart';
 import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/chat/chat_side_menu.dart';
 import 'package:bruig/components/chat/record_audio.dart';
@@ -7,6 +8,7 @@ import 'package:bruig/components/chat/rtc_session_header.dart';
 import 'package:bruig/components/containers.dart';
 import 'package:bruig/components/manage_gc.dart';
 import 'package:bruig/components/typing_emoji_panel.dart';
+import 'package:bruig/components/text.dart';
 import 'package:bruig/models/emoji.dart';
 import 'package:bruig/models/audio.dart';
 import 'package:bruig/models/realtimechat.dart';
@@ -227,57 +229,79 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
 
     bool isScreenSmall = checkIsScreenSmall(context);
 
-    return ScreenWithChatSideMenu(
-        client,
-        Column(
-          children: [
-            if (currentInstantSession != null)
-              Box(
-                color: SurfaceColor.primaryContainer,
-                margin: const EdgeInsets.only(bottom: 5),
-                padding: const EdgeInsets.all(5),
-                child: RTCSessionHeader(
+    if (currentInstantSession != null) {
+      return Consumer<ThemeNotifier>(
+          builder: (context, theme, _) => Container(
+              padding: const EdgeInsets.only(
+                  left: 15, right: 15, top: 8, bottom: 12),
+              child: Column(children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Txt.H("Instant Call"),
+                  ],
+                ),
+                SizedBox(height: 30),
+                ChatAvatar(
+                  chat,
+                  radius: 100,
+                ),
+                SizedBox(height: 15),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Txt.L(chat.nick),
+                  ],
+                ),
+                SizedBox(height: 30),
+                RTCSessionHeader(
                     rtc, currentInstantSession!, widget.audio, client, true),
-              ),
-            if (rtcSession != null)
-              Box(
-                color: SurfaceColor.primaryContainer,
-                margin: const EdgeInsets.only(bottom: 5),
-                padding: const EdgeInsets.all(5),
-                child: RTCSessionHeader(
-                    rtc, rtcSession!, widget.audio, client, false),
-              ),
-            Expanded(
-              child: Stack(children: [
-                Messages(chat, client, _itemScrollController,
-                    _itemPositionsListener),
-                Positioned(
-                    bottom: 10,
-                    left: 10,
-                    right: 10,
-                    child: Consumer<TypingEmojiSelModel>(
-                        builder: (context, typingEmoji, child) =>
-                            TypingEmojiPanel(
-                              model: typingEmoji,
-                              focusNode: inputFocusNode,
-                            ))),
-                if (isScreenSmall)
+              ])));
+    } else {
+      return ScreenWithChatSideMenu(
+          client,
+          Column(
+            children: [
+              if (rtcSession != null)
+                Box(
+                  color: SurfaceColor.primaryContainer,
+                  margin: const EdgeInsets.only(bottom: 5),
+                  padding: const EdgeInsets.all(5),
+                  child: RTCSessionHeader(
+                      rtc, rtcSession!, widget.audio, client, false),
+                ),
+              Expanded(
+                child: Stack(children: [
+                  Messages(chat, client, _itemScrollController,
+                      _itemPositionsListener),
                   Positioned(
-                      left: 10,
                       bottom: 10,
+                      left: 10,
                       right: 10,
-                      child: Consumer<AudioModel>(
-                          builder: (context, audio, child) =>
-                              SmallScreenRecordInfoPanel(audio: audio))),
-              ]),
-            ),
-            if (!chat.killed)
-              Container(
-                  padding: isScreenSmall
-                      ? const EdgeInsets.all(10)
-                      : const EdgeInsets.all(5),
-                  child: ChatInput(sendMsg, chat, inputFocusNode))
-          ],
-        ));
+                      child: Consumer<TypingEmojiSelModel>(
+                          builder: (context, typingEmoji, child) =>
+                              TypingEmojiPanel(
+                                model: typingEmoji,
+                                focusNode: inputFocusNode,
+                              ))),
+                  if (isScreenSmall)
+                    Positioned(
+                        left: 10,
+                        bottom: 10,
+                        right: 10,
+                        child: Consumer<AudioModel>(
+                            builder: (context, audio, child) =>
+                                SmallScreenRecordInfoPanel(audio: audio))),
+                ]),
+              ),
+              if (!chat.killed)
+                Container(
+                    padding: isScreenSmall
+                        ? const EdgeInsets.all(10)
+                        : const EdgeInsets.all(5),
+                    child: ChatInput(sendMsg, chat, inputFocusNode))
+            ],
+          ));
+    }
   }
 }

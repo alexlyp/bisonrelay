@@ -94,8 +94,10 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
     try {
       await rtc.dissolveSession(session.sessionRV);
       if (session.isInstant) {
-        var cm = client.getExistingChat(session.info.gc);
-        cm?.finishInstantCall();
+        for (var m in session.info.members) {
+          var cm = client.getExistingChat(m.uid);
+          cm?.finishInstantCall();
+        }
       }
       showSuccessSnackbar(this, "Dissolved session ${session.sessionShortRV}");
     } catch (exception) {
@@ -294,54 +296,52 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
         ),
       ]);
     } else {
-      return Row(children: [
-        Expanded(
-            child: Wrap(
-                runSpacing: 10,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-              if (session.inLiveSession)
-                basicButton(Icons.phone,
-                    !session.leavingLiveSession ? leaveLiveSession : null,
-                    style: IconButton.styleFrom(
-                      foregroundColor: theme.colors.error,
-                      backgroundColor: theme.colors.errorContainer,
-                    ))
-              else
-                ElevatedButton.icon(
-                    icon: const Icon(Icons.join_right),
-                    label: const Txt("Join Live Session"),
-                    onPressed:
-                        !session.joiningLiveSession ? joinLiveSession : null),
-              SizedBox(width: isSmallScreen ? 5 : 20),
-              if (session.inLiveSession && !session.hasHotAudio)
-                basicButton(Icons.mic_sharp, makeAudioHot,
-                    style: IconButton.styleFrom(
-                        backgroundColor: theme.colors.surfaceContainer,
-                        foregroundColor: theme.colors.surface)),
-              if (session.hasHotAudio && widget.basic)
-                basicButton(Icons.mic_off_sharp, disableHotAudio,
-                    style: IconButton.styleFrom(
-                        backgroundColor: theme.colors.errorContainer,
-                        foregroundColor: theme.colors.error)),
-              const SizedBox(width: 10),
-              if (session.inLiveSession && session.info.members.length > 1)
-                Txt.S("Waiting for other participant to connect...")
-              else
-                Txt.S("Connected"),
-              if (Platform.isAndroid &&
-                  audio.androidFoundPlaybackDevices &&
-                  session.inLiveSession) ...[
-                SizedBox(width: isSmallScreen ? 5 : 20),
-                button(
-                    audio.playbackDeviceId == audio.androidSpeakerDeviceID
-                        ? Icons.speaker
-                        : Icons.volume_up,
-                    "",
-                    toggleAndroidSpeaker),
-              ]
-            ]))
-      ]);
+      return Expanded(
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        if (session.inLiveSession)
+          basicButton(
+              Icons.phone, !session.leavingLiveSession ? doDissolveSess : null,
+              style: IconButton.styleFrom(
+                iconSize: 50,
+                foregroundColor: theme.colors.error,
+                backgroundColor: theme.colors.errorContainer,
+              )),
+        SizedBox(width: isSmallScreen ? 5 : 20),
+        if (session.inLiveSession &&
+            session.info.metadata.publishers.length == 1)
+          Txt.S("Waiting for other participant to connect...")
+        else
+          Txt.S("Connected"),
+        SizedBox(width: isSmallScreen ? 5 : 20),
+        if (session.inLiveSession && !session.hasHotAudio)
+          basicButton(Icons.mic_sharp, makeAudioHot,
+              style: IconButton.styleFrom(
+                  iconSize: 50,
+                  hoverColor:
+                      theme.colors.surfaceContainer.withValues(alpha: 1.0),
+                  backgroundColor: theme.colors.primaryContainer,
+                  foregroundColor: theme.colors.primary)),
+        if (session.hasHotAudio && widget.basic)
+          basicButton(Icons.mic_off_sharp, disableHotAudio,
+              style: IconButton.styleFrom(
+                  iconSize: 50,
+                  hoverColor:
+                      theme.colors.errorContainer.withValues(alpha: 10.0),
+                  backgroundColor: theme.colors.errorContainer,
+                  foregroundColor: theme.colors.error)),
+        const SizedBox(width: 10),
+        if (Platform.isAndroid &&
+            audio.androidFoundPlaybackDevices &&
+            session.inLiveSession) ...[
+          SizedBox(width: isSmallScreen ? 5 : 20),
+          button(
+              audio.playbackDeviceId == audio.androidSpeakerDeviceID
+                  ? Icons.speaker
+                  : Icons.volume_up,
+              "",
+              toggleAndroidSpeaker),
+        ]
+      ]));
     }
   }
 }

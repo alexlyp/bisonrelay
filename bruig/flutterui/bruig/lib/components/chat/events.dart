@@ -1118,7 +1118,8 @@ class ProfileUpdatedW extends StatelessWidget {
 class RTDTInviteW extends StatefulWidget {
   final InvitedToRTDTSess event;
   final RealtimeChatModel rtc;
-  const RTDTInviteW(this.event, this.rtc, {super.key});
+  final ChatModel chat;
+  const RTDTInviteW(this.event, this.rtc, this.chat, {super.key});
 
   @override
   State<RTDTInviteW> createState() => _RTDTInviteWState();
@@ -1127,9 +1128,10 @@ class RTDTInviteW extends StatefulWidget {
 class _RTDTInviteWState extends State<RTDTInviteW> {
   InvitedToRTDTSess get event => widget.event;
   RealtimeChatModel get rtc => widget.rtc;
+  ChatModel get chat => widget.chat;
+
   bool acceptingInvite = false;
   String? acceptError;
-
   void acceptInvite() async {
     setState(() => acceptingInvite = true);
     try {
@@ -1142,6 +1144,7 @@ class _RTDTInviteWState extends State<RTDTInviteW> {
 
   @override
   Widget build(BuildContext context) {
+    print("building invite accept again");
     if (rtc.isInviteCanceled(event)) {
       return const ServerEvent(msg: "Canceled realtime chat invite");
     }
@@ -1156,6 +1159,17 @@ class _RTDTInviteWState extends State<RTDTInviteW> {
     }
 
     if (rtc.isInviteAccepted(event)) {
+      print("invite is accepted");
+      for (var session in rtc.sessions) {
+        if (session.isInstant &&
+            session.sessionRV == event.invite.rv &&
+            chat.currentSessions(chat.id) == null &&
+            !acceptingInvite) {
+          chat.startInstantCall(session);
+          break;
+        }
+      }
+
       return const ServerEvent(msg: "Accepted realtime chat invite");
     }
 
@@ -1310,7 +1324,7 @@ class Event extends StatelessWidget {
 
     if (event.event is InvitedToRTDTSess) {
       return RTDTInviteW(event.event as InvitedToRTDTSess,
-          RealtimeChatModel.of(context, listen: false));
+          RealtimeChatModel.of(context, listen: false), chat);
     }
 
     return const Box(
