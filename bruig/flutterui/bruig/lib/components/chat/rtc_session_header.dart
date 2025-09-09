@@ -40,10 +40,9 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
       await rtc.leaveLiveSession(session);
       setState(() {
         if (session.isInstant) {
-          for (var m in session.info.members) {
-            var cm = client.getExistingChat(m.uid);
-            cm?.finishInstantCall();
-          }
+          // Leave instant 1v1 session
+          var cm = client.getExistingChat(session.info.metadata.owner);
+          cm?.finishInstantCall();
         }
       });
     } catch (exception) {
@@ -304,7 +303,12 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         if (session.inLiveSession)
           basicButton(
-              Icons.phone, !session.leavingLiveSession ? doDissolveSess : null,
+              Icons.phone,
+              !session.leavingLiveSession
+                  ? session.isAdmin
+                      ? doDissolveSess
+                      : leaveLiveSession
+                  : null,
               style: IconButton.styleFrom(
                 iconSize: 50,
                 foregroundColor: theme.colors.error,
