@@ -77,6 +77,14 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
   void doExitSess() async {
     try {
       await rtc.exitSession(session.sessionRV);
+
+      setState(() {
+        if (session.isInstant) {
+          // Leave instant 1v1 session
+          var cm = client.getExistingChat(session.info.metadata.owner);
+          cm?.finishInstantCall();
+        }
+      });
       showSuccessSnackbar(this, "Exited session ${session.sessionShortRV}");
     } catch (exception) {
       showErrorSnackbar(this, "Unable to exit session: $exception");
@@ -307,7 +315,7 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
               !session.leavingLiveSession
                   ? session.isAdmin
                       ? doDissolveSess
-                      : leaveLiveSession
+                      : doExitSess
                   : null,
               style: IconButton.styleFrom(
                 iconSize: 50,
