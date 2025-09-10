@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:bruig/components/confirmation_dialog.dart';
+import 'package:bruig/components/interactive_avatar.dart';
 import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/text.dart';
 import 'package:bruig/models/client.dart';
@@ -12,13 +13,16 @@ import 'package:golib_plugin/definitions.dart';
 import 'package:bruig/theme_manager.dart';
 import 'package:bruig/util.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class InstantCallScreen extends StatefulWidget {
   final RealtimeChatModel rtc;
   final RTDTSessionModel session;
   final AudioModel audio;
   final ClientModel client;
-  const InstantCallScreen(this.rtc, this.session, this.audio, this.client,
+  final ChatModel chat;
+  const InstantCallScreen(
+      this.rtc, this.session, this.audio, this.client, this.chat,
       {super.key});
 
   @override
@@ -30,10 +34,11 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   RealtimeChatModel get rtc => widget.rtc;
   AudioModel get audio => widget.audio;
   ClientModel get client => widget.client;
+  ChatModel get chat => widget.chat;
   List<RMRTDTSessionPublisher> publishers = [];
   RTDTLivePeerModel? livePeer;
   Timer? timerRefresh;
-  ChatModel? livePeerChat;
+  bool livePeerConnected = false;
 
   void leaveLiveSession() async {
     try {
@@ -47,14 +52,6 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
       });
     } catch (exception) {
       showErrorSnackbar(this, "Unable to leave session: $exception");
-    }
-  }
-
-  void joinLiveSession() async {
-    try {
-      await rtc.joinLiveSession(session);
-    } catch (exception) {
-      showErrorSnackbar(this, "Unable to join session: $exception");
     }
   }
 
@@ -116,49 +113,33 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     }
   }
 
-  void confirmDissolveSess() {
-    showConfirmDialog(context,
-        title: "Confirm dissolve session?",
-        content:
-            "Really dissolve this realtime chat session? The session cannot be recreated.",
-        onConfirm: doDissolveSess);
-  }
-
-  void doRotateSessCookies() async {
-    try {
-      await session.rotateCookies();
-      showSuccessSnackbar(
-          this, "Rotate session ${session.sessionShortRV} cookies");
-    } catch (exception) {
-      showErrorSnackbar(this, "Unable to rotate session cookies: $exception");
-    }
-  }
-
-  void rotateSessCookies() {
-    showConfirmDialog(context,
-        title: "Rotate session cookies?",
-        content:
-            "This will prevent any members that were kicked from rejoining. In rare cases, it may disrupt live peers.",
-        onConfirm: doRotateSessCookies);
-  }
-
-  void sessionUpdated() {
+  void sessionUpdated() async {
+    bool finishCall = false;
     setState(() {
       publishers = session.info.metadata.publishers;
       ChatModel? peerChat;
-
+      print("session updated");
       for (var pub in publishers) {
         peerChat = client.getExistingChat(pub.publisherID);
         if (peerChat != null) {
+          print("setting live peer on session update ${pub.peerID}");
           livePeer = session.livePeer(pub.peerID);
-          livePeerChat = peerChat;
+          if (!livePeerConnected && livePeer != null) {
+            print("peer first connected");
+            livePeerConnected = true;
+          } else if (livePeerConnected && livePeer == null) {
+            print("peer disconnected, finish call");
+            finishCall = true;
+            livePeerConnected = false;
+          }
         }
       }
-      if (peerChat == null) {
-        livePeer = null;
-        livePeerChat?.finishInstantCall();
-      }
     });
+    if (finishCall) {
+      await rtc.dissolveSession(session.sessionRV);
+      print("peer disonnected, finish call");
+      chat.finishInstantCall();
+    }
   }
 
   void toggleAndroidSpeaker() async {
@@ -188,8 +169,12 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     session.addListener(sessionUpdated);
     publishers = session.info.metadata.publishers;
     for (var pub in publishers) {
-      livePeerChat = client.getExistingChat(pub.publisherID);
-      if (livePeerChat != null) {
+      var peerChat = client.getExistingChat(pub.publisherID);
+      if (peerChat != null) {
+        if (!livePeerConnected) {
+          livePeerConnected = true;
+        }
+        print("setting live peer: init state");
         livePeer = session.livePeer(pub.peerID);
         break;
       }
@@ -201,14 +186,19 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   @override
   void didUpdateWidget(InstantCallScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    print("instant call widget update");
     if (oldWidget.session != session) {
       oldWidget.session.removeListener(sessionUpdated);
       session.addListener(sessionUpdated);
       publishers = session.info.metadata.publishers;
       for (var pub in publishers) {
-        livePeerChat = client.getExistingChat(pub.publisherID);
-        if (livePeerChat != null) {
+        var peerChat = client.getExistingChat(pub.publisherID);
+        if (peerChat != null) {
           livePeer = session.livePeer(pub.peerID);
+          if (!livePeerConnected && livePeer != null) {
+            livePeerConnected = true;
+          }
+          print("setting live peer: instant call widget update");
         }
       }
     }
@@ -224,22 +214,7 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   @override
   Widget build(BuildContext context) {
     var isSmallScreen = checkIsScreenSmall(context);
-
-    // Helper to show an icon button or elevated button depending on screen size.
-    Widget button(IconData icon, String label, VoidCallback? onPressed,
-        {ButtonStyle? style}) {
-      if (isSmallScreen) {
-        return ElevatedButton(
-            onPressed: onPressed, style: style, child: Icon(icon));
-      } else {
-        return ElevatedButton.icon(
-            icon: Icon(icon),
-            label: Txt(label),
-            onPressed: onPressed,
-            style: style);
-      }
-    }
-
+    print("build $livePeer ${session.inLiveSession}");
     // Helper to show an icon button or elevated button depending on screen size.
     Widget basicButton(IconData icon, VoidCallback? onPressed,
         {ButtonStyle? style}) {
@@ -250,68 +225,93 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
       }
     }
 
-    var theme = ThemeNotifier.of(context, listen: false);
-
-    return Expanded(
-        child: Column(children: [
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        if (session.inLiveSession && livePeer == null)
-          Txt.S("Waiting for other participant to connect...")
-        else
-          Txt.S("Connected"),
-        if (session.inLiveSession &&
-            livePeer != null &&
-            (livePeer?.bufferCount ?? 0) > 0) ...[
-          const SizedBox(width: 20),
-          Txt.S(
-              "buf: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
-        ],
-        SizedBox(width: isSmallScreen ? 5 : 20),
-      ]),
-      SizedBox(height: 20),
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        if (session.inLiveSession && !session.hasHotAudio)
-          basicButton(Icons.mic_sharp, makeAudioHot,
-              style: IconButton.styleFrom(
-                  iconSize: 50,
-                  hoverColor:
-                      theme.colors.surfaceContainer.withValues(alpha: 1.0),
-                  backgroundColor: theme.colors.primaryContainer,
-                  foregroundColor: theme.colors.primary)),
-        if (session.hasHotAudio)
-          basicButton(Icons.mic_off_sharp, disableHotAudio,
-              style: IconButton.styleFrom(
-                  iconSize: 50,
-                  hoverColor:
-                      theme.colors.errorContainer.withValues(alpha: 10.0),
-                  backgroundColor: theme.colors.errorContainer,
-                  foregroundColor: theme.colors.error)),
-        const SizedBox(width: 10),
-        if (Platform.isAndroid &&
-            audio.androidFoundPlaybackDevices &&
-            session.inLiveSession) ...[
-          SizedBox(width: isSmallScreen ? 5 : 20),
-          button(
-              audio.playbackDeviceId == audio.androidSpeakerDeviceID
-                  ? Icons.speaker
-                  : Icons.volume_up,
-              "",
-              toggleAndroidSpeaker),
-        ],
-        if (session.inLiveSession)
-          basicButton(
-              Icons.phone_rounded,
-              !session.leavingLiveSession
-                  ? session.isAdmin
-                      ? doDissolveSess
-                      : doExitSess
-                  : null,
-              style: IconButton.styleFrom(
-                iconSize: 50,
-                foregroundColor: theme.colors.error,
-                backgroundColor: theme.colors.errorContainer,
-              )),
-      ])
-    ]));
+    return Consumer<ThemeNotifier>(
+        builder: (context, theme, _) => Container(
+            padding:
+                const EdgeInsets.only(left: 15, right: 15, top: 8, bottom: 12),
+            child: Column(children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Txt.H("Instant Call"),
+                ],
+              ),
+              SizedBox(height: 30),
+              ChatAvatar(
+                chat,
+                radius: 100,
+              ),
+              SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Txt.L(chat.nick),
+                ],
+              ),
+              SizedBox(height: 30),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                if (session.inLiveSession && livePeer == null)
+                  Txt.S("Waiting for other participant to connect...")
+                else
+                  Txt.S("Connected"),
+                if (session.inLiveSession &&
+                    livePeer != null &&
+                    (livePeer?.bufferCount ?? 0) > 0) ...[
+                  const SizedBox(width: 20),
+                  Txt.S(
+                      "buf: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
+                ],
+                SizedBox(width: isSmallScreen ? 5 : 20),
+              ]),
+              SizedBox(height: 20),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                if (session.inLiveSession && !session.hasHotAudio)
+                  basicButton(Icons.mic_sharp, makeAudioHot,
+                      style: IconButton.styleFrom(
+                          iconSize: 50,
+                          hoverColor: theme.colors.surfaceContainer
+                              .withValues(alpha: 1.0),
+                          backgroundColor: theme.colors.primaryContainer,
+                          foregroundColor: theme.colors.primary)),
+                if (session.hasHotAudio)
+                  basicButton(Icons.mic_off_sharp, disableHotAudio,
+                      style: IconButton.styleFrom(
+                          iconSize: 50,
+                          hoverColor: theme.colors.errorContainer
+                              .withValues(alpha: 10.0),
+                          backgroundColor: theme.colors.errorContainer,
+                          foregroundColor: theme.colors.error)),
+                const SizedBox(width: 10),
+                if (Platform.isAndroid &&
+                    audio.androidFoundPlaybackDevices &&
+                    session.inLiveSession) ...[
+                  SizedBox(width: isSmallScreen ? 5 : 20),
+                  basicButton(
+                      audio.playbackDeviceId == audio.androidSpeakerDeviceID
+                          ? Icons.speaker
+                          : Icons.volume_up,
+                      toggleAndroidSpeaker,
+                      style: IconButton.styleFrom(
+                          iconSize: 50,
+                          hoverColor: theme.colors.errorContainer
+                              .withValues(alpha: 10.0),
+                          backgroundColor: theme.colors.errorContainer,
+                          foregroundColor: theme.colors.error)),
+                ],
+                if (session.inLiveSession)
+                  basicButton(
+                      Icons.phone_rounded,
+                      !session.leavingLiveSession
+                          ? session.isAdmin
+                              ? doDissolveSess
+                              : doExitSess
+                          : null,
+                      style: IconButton.styleFrom(
+                        iconSize: 50,
+                        foregroundColor: theme.colors.error,
+                        backgroundColor: theme.colors.errorContainer,
+                      )),
+              ])
+            ])));
   }
 }

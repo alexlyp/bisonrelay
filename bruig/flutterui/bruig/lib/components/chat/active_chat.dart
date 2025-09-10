@@ -1,15 +1,12 @@
 import 'dart:async';
 
 import 'package:bruig/components/chat/instantcallscreen.dart';
-import 'package:bruig/components/interactive_avatar.dart';
-import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/chat/chat_side_menu.dart';
 import 'package:bruig/components/chat/record_audio.dart';
 import 'package:bruig/components/chat/rtc_session_header.dart';
 import 'package:bruig/components/containers.dart';
 import 'package:bruig/components/manage_gc.dart';
 import 'package:bruig/components/typing_emoji_panel.dart';
-import 'package:bruig/components/text.dart';
 import 'package:bruig/models/emoji.dart';
 import 'package:bruig/models/audio.dart';
 import 'package:bruig/models/realtimechat.dart';
@@ -231,33 +228,8 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
     bool isScreenSmall = checkIsScreenSmall(context);
 
     if (currentInstantSession != null) {
-      return Consumer<ThemeNotifier>(
-          builder: (context, theme, _) => Container(
-              padding: const EdgeInsets.only(
-                  left: 15, right: 15, top: 8, bottom: 12),
-              child: Column(children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Txt.H("Instant Call"),
-                  ],
-                ),
-                SizedBox(height: 30),
-                ChatAvatar(
-                  chat,
-                  radius: 100,
-                ),
-                SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Txt.L(chat.nick),
-                  ],
-                ),
-                SizedBox(height: 30),
-                InstantCallScreen(
-                    rtc, currentInstantSession!, widget.audio, client),
-              ])));
+      return InstantCallScreen(
+          rtc, currentInstantSession!, widget.audio, client, chat);
     } else {
       return ScreenWithChatSideMenu(
           client,
