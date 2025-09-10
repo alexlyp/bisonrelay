@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bruig/components/chat/instantcallscreen.dart';
 import 'package:bruig/components/interactive_avatar.dart';
 import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/chat/chat_side_menu.dart';
@@ -254,8 +255,8 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
                   ],
                 ),
                 SizedBox(height: 30),
-                RTCSessionHeader(
-                    rtc, currentInstantSession!, widget.audio, client, true),
+                InstantCallScreen(
+                    rtc, currentInstantSession!, widget.audio, client),
               ])));
     } else {
       return ScreenWithChatSideMenu(
@@ -267,8 +268,8 @@ class _ActiveChatState extends State<ActiveChat> with RouteAware {
                   color: SurfaceColor.primaryContainer,
                   margin: const EdgeInsets.only(bottom: 5),
                   padding: const EdgeInsets.all(5),
-                  child: RTCSessionHeader(
-                      rtc, rtcSession!, widget.audio, client, false),
+                  child:
+                      RTCSessionHeader(rtc, rtcSession!, widget.audio, client),
                 ),
               Expanded(
                 child: Stack(children: [

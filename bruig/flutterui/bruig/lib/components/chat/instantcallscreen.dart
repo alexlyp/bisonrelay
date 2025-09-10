@@ -2,39 +2,38 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:bruig/components/confirmation_dialog.dart';
-import 'package:bruig/components/context_menu.dart';
-import 'package:bruig/components/empty_widget.dart';
 import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/components/text.dart';
 import 'package:bruig/models/client.dart';
 import 'package:bruig/models/audio.dart';
 import 'package:bruig/models/realtimechat.dart';
 import 'package:bruig/models/uistate.dart';
-import 'package:bruig/screens/realtimechat/invitetortc.dart';
-import 'package:bruig/screens/realtimechat/rtclist.dart';
 import 'package:golib_plugin/definitions.dart';
 import 'package:bruig/theme_manager.dart';
 import 'package:bruig/util.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-class RTCSessionHeader extends StatefulWidget {
+class InstantCallScreen extends StatefulWidget {
   final RealtimeChatModel rtc;
   final RTDTSessionModel session;
   final AudioModel audio;
   final ClientModel client;
-  const RTCSessionHeader(this.rtc, this.session, this.audio, this.client,
+  const InstantCallScreen(this.rtc, this.session, this.audio, this.client,
       {super.key});
 
   @override
-  State<RTCSessionHeader> createState() => _RTCSessionHeaderState();
+  State<InstantCallScreen> createState() => _InstantCallScreenState();
 }
 
-class _RTCSessionHeaderState extends State<RTCSessionHeader> {
+class _InstantCallScreenState extends State<InstantCallScreen> {
   RTDTSessionModel get session => widget.session;
   RealtimeChatModel get rtc => widget.rtc;
   AudioModel get audio => widget.audio;
   ClientModel get client => widget.client;
+  List<RMRTDTSessionPublisher> publishers = [];
+  RTDTLivePeerModel? livePeer;
+  Timer? timerRefresh;
+  ChatModel? livePeerChat;
 
   void leaveLiveSession() async {
     try {
@@ -144,7 +143,22 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
   }
 
   void sessionUpdated() {
-    setState(() {});
+    setState(() {
+      publishers = session.info.metadata.publishers;
+      ChatModel? peerChat;
+
+      for (var pub in publishers) {
+        peerChat = client.getExistingChat(pub.publisherID);
+        if (peerChat != null) {
+          livePeer = session.livePeer(pub.peerID);
+          livePeerChat = peerChat;
+        }
+      }
+      if (peerChat == null) {
+        livePeer = null;
+        livePeerChat?.finishInstantCall();
+      }
+    });
   }
 
   void toggleAndroidSpeaker() async {
@@ -172,20 +186,38 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
   void initState() {
     super.initState();
     session.addListener(sessionUpdated);
+    publishers = session.info.metadata.publishers;
+    for (var pub in publishers) {
+      livePeerChat = client.getExistingChat(pub.publisherID);
+      if (livePeerChat != null) {
+        livePeer = session.livePeer(pub.peerID);
+        break;
+      }
+    }
+    // Create a timer to refresh details every 1 second (bufferCount, etc).
+    timerRefresh = Timer.periodic(Duration(seconds: 1), refreshIfLive);
   }
 
   @override
-  void didUpdateWidget(RTCSessionHeader oldWidget) {
+  void didUpdateWidget(InstantCallScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.session != session) {
       oldWidget.session.removeListener(sessionUpdated);
       session.addListener(sessionUpdated);
+      publishers = session.info.metadata.publishers;
+      for (var pub in publishers) {
+        livePeerChat = client.getExistingChat(pub.publisherID);
+        if (livePeerChat != null) {
+          livePeer = session.livePeer(pub.peerID);
+        }
+      }
     }
   }
 
   @override
   void dispose() {
     session.removeListener(sessionUpdated);
+    timerRefresh?.cancel();
     super.dispose();
   }
 
@@ -208,99 +240,78 @@ class _RTCSessionHeaderState extends State<RTCSessionHeader> {
       }
     }
 
+    // Helper to show an icon button or elevated button depending on screen size.
+    Widget basicButton(IconData icon, VoidCallback? onPressed,
+        {ButtonStyle? style}) {
+      if (isSmallScreen) {
+        return IconButton(onPressed: onPressed, style: style, icon: Icon(icon));
+      } else {
+        return IconButton(icon: Icon(icon), onPressed: onPressed, style: style);
+      }
+    }
+
     var theme = ThemeNotifier.of(context, listen: false);
 
-    return Row(children: [
-      Expanded(
-          child: Wrap(
-              runSpacing: 10,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-            if (session.inLiveSession)
-              button(Icons.keyboard_return, "Leave Live Session",
-                  !session.leavingLiveSession ? leaveLiveSession : null)
-            else
-              ElevatedButton.icon(
-                  icon: const Icon(Icons.join_right),
-                  label: const Txt("Join Live Session"),
-                  onPressed:
-                      !session.joiningLiveSession ? joinLiveSession : null),
-            SizedBox(width: isSmallScreen ? 5 : 20),
-            if (session.inLiveSession && !session.hasHotAudio)
-              button(Icons.mic_sharp, "Enable mic", makeAudioHot,
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colors.surface,
-                      textStyle: theme.textStyleFor(
-                          context, TextSize.medium, TextColor.onPrimary))),
-            if (session.hasHotAudio)
-              button(Icons.mic_off_sharp, "Disable Mic", disableHotAudio,
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colors.errorContainer,
-                      textStyle: theme.textStyleFor(context, TextSize.medium,
-                          TextColor.onErrorContainer))),
-            if (Platform.isAndroid &&
-                audio.androidFoundPlaybackDevices &&
-                session.inLiveSession) ...[
-              SizedBox(width: isSmallScreen ? 5 : 20),
-              button(
-                  audio.playbackDeviceId == audio.androidSpeakerDeviceID
-                      ? Icons.speaker
-                      : Icons.volume_up,
-                  "",
-                  toggleAndroidSpeaker),
-            ],
-            if (session.inLiveSession) ...[
-              const SizedBox(width: 10),
-              Consumer<RealtimeChatRTTModel>(
-                  builder: (context, rtt, child) => rtt.lastRTTNano > 0
-                      ? Txt.S("RTT ${rtt.lastRTTNanoStr}")
-                      : const Empty())
-            ],
-          ])),
-      ContextMenu(
-        handleItemTap: (v) {
-          switch (v) {
-            case "gotosess":
-              rtc.active.active = session;
-              Navigator.of(context).pushNamed(RealtimeChatScreen.routeName);
-              break;
-            case "invite":
-              Navigator.of(context, rootNavigator: true).pushNamed(
-                  InviteToRealtimeChatScreen.routeName,
-                  arguments: session);
-              break;
-            case "exit":
-              confirmExitSess();
-              break;
-            case "dissolve":
-              confirmDissolveSess();
-              break;
-            case "rotcookies":
-              rotateSessCookies();
-            case null:
-              break;
-            default:
-              showErrorSnackbar(this, "Unknown key in menu: '$v'");
-          }
-        },
-        items: [
-          const PopupMenuItem(
-              value: "gotosess", child: Text("View Session Info")),
-          if (session.isAdmin)
-            const PopupMenuItem(
-                value: "invite", child: Text("Invite to Session")),
-          if (!session.isAdmin)
-            const PopupMenuItem(
-                value: "exit", child: Text("Permanently exit Session")),
-          if (session.isAdmin)
-            const PopupMenuItem(
-                value: "rotcookies", child: Text("Rotate Cookies")),
-          if (session.isAdmin)
-            const PopupMenuItem(
-                value: "dissolve", child: Text("Dissolve Session")),
+    return Expanded(
+        child: Column(children: [
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        if (session.inLiveSession && livePeer == null)
+          Txt.S("Waiting for other participant to connect...")
+        else
+          Txt.S("Connected"),
+        if (session.inLiveSession &&
+            livePeer != null &&
+            (livePeer?.bufferCount ?? 0) > 0) ...[
+          const SizedBox(width: 20),
+          Txt.S(
+              "buf: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
         ],
-        child: const Icon(Icons.menu),
-      ),
-    ]);
+        SizedBox(width: isSmallScreen ? 5 : 20),
+      ]),
+      SizedBox(height: 20),
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        if (session.inLiveSession && !session.hasHotAudio)
+          basicButton(Icons.mic_sharp, makeAudioHot,
+              style: IconButton.styleFrom(
+                  iconSize: 50,
+                  hoverColor:
+                      theme.colors.surfaceContainer.withValues(alpha: 1.0),
+                  backgroundColor: theme.colors.primaryContainer,
+                  foregroundColor: theme.colors.primary)),
+        if (session.hasHotAudio)
+          basicButton(Icons.mic_off_sharp, disableHotAudio,
+              style: IconButton.styleFrom(
+                  iconSize: 50,
+                  hoverColor:
+                      theme.colors.errorContainer.withValues(alpha: 10.0),
+                  backgroundColor: theme.colors.errorContainer,
+                  foregroundColor: theme.colors.error)),
+        const SizedBox(width: 10),
+        if (Platform.isAndroid &&
+            audio.androidFoundPlaybackDevices &&
+            session.inLiveSession) ...[
+          SizedBox(width: isSmallScreen ? 5 : 20),
+          button(
+              audio.playbackDeviceId == audio.androidSpeakerDeviceID
+                  ? Icons.speaker
+                  : Icons.volume_up,
+              "",
+              toggleAndroidSpeaker),
+        ],
+        if (session.inLiveSession)
+          basicButton(
+              Icons.phone_rounded,
+              !session.leavingLiveSession
+                  ? session.isAdmin
+                      ? doDissolveSess
+                      : doExitSess
+                  : null,
+              style: IconButton.styleFrom(
+                iconSize: 50,
+                foregroundColor: theme.colors.error,
+                backgroundColor: theme.colors.errorContainer,
+              )),
+      ])
+    ]));
   }
 }
