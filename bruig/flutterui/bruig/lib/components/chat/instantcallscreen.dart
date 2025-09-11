@@ -229,89 +229,91 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
         builder: (context, theme, _) => Container(
             padding:
                 const EdgeInsets.only(left: 15, right: 15, top: 8, bottom: 12),
-            child: Column(children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Txt.H("Instant Call"),
-                ],
-              ),
-              SizedBox(height: 30),
-              ChatAvatar(
-                chat,
-                radius: 100,
-              ),
-              SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Txt.L(chat.nick),
-                ],
-              ),
-              SizedBox(height: 30),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                if (session.inLiveSession && livePeer == null)
-                  Txt.S("Waiting for other participant to connect...")
-                else
-                  Txt.S("Connected"),
-                if (session.inLiveSession &&
-                    livePeer != null &&
-                    (livePeer?.bufferCount ?? 0) > 0) ...[
-                  const SizedBox(width: 20),
-                  Txt.S(
-                      "buf: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
-                ],
-                SizedBox(width: isSmallScreen ? 5 : 20),
-              ]),
-              SizedBox(height: 20),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                if (session.inLiveSession && !session.hasHotAudio)
-                  basicButton(Icons.mic_sharp, makeAudioHot,
-                      style: IconButton.styleFrom(
-                          iconSize: 50,
-                          hoverColor: theme.colors.surfaceContainer
-                              .withValues(alpha: 1.0),
-                          backgroundColor: theme.colors.primaryContainer,
-                          foregroundColor: theme.colors.primary)),
-                if (session.hasHotAudio)
-                  basicButton(Icons.mic_off_sharp, disableHotAudio,
-                      style: IconButton.styleFrom(
-                          iconSize: 50,
-                          hoverColor: theme.colors.errorContainer
-                              .withValues(alpha: 10.0),
-                          backgroundColor: theme.colors.errorContainer,
-                          foregroundColor: theme.colors.error)),
-                const SizedBox(width: 10),
-                if (Platform.isAndroid &&
-                    audio.androidFoundPlaybackDevices &&
-                    session.inLiveSession) ...[
-                  SizedBox(width: isSmallScreen ? 5 : 20),
-                  basicButton(
-                      audio.playbackDeviceId == audio.androidSpeakerDeviceID
-                          ? Icons.speaker
-                          : Icons.volume_up,
-                      toggleAndroidSpeaker,
-                      style: IconButton.styleFrom(
-                          iconSize: 50,
-                          hoverColor: theme.colors.errorContainer
-                              .withValues(alpha: 10.0),
-                          backgroundColor: theme.colors.errorContainer,
-                          foregroundColor: theme.colors.error)),
-                ],
-                if (session.inLiveSession)
-                  basicButton(
-                      Icons.phone_rounded,
-                      !session.leavingLiveSession
-                          ? session.isAdmin
-                              ? doDissolveSess
-                              : doExitSess
-                          : null,
-                      style: IconButton.styleFrom(
-                        iconSize: 50,
-                        foregroundColor: theme.colors.error,
-                        backgroundColor: theme.colors.errorContainer,
-                      )),
-              ])
-            ])));
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Txt.H("Instant Call"),
+                    ],
+                  ),
+                  ChatAvatar(
+                    chat,
+                    radius: 100,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Txt.L(chat.nick),
+                    ],
+                  ),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    if (session.inLiveSession && livePeer == null)
+                      Txt.S("Waiting for other participant to connect...")
+                    else
+                      Txt.S(
+                          "${timeDifference(chat.instantCallStart, DateTime.now())}s"),
+                    if (session.inLiveSession &&
+                        livePeer != null &&
+                        (livePeer?.bufferCount ?? 0) > 0) ...[
+                      const SizedBox(width: 20),
+                      Txt.S(
+                          "Server Latency: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
+                    ],
+                    SizedBox(width: isSmallScreen ? 5 : 20),
+                  ]),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (session.inLiveSession && !session.hasHotAudio)
+                          basicButton(Icons.mic_sharp, makeAudioHot,
+                              style: IconButton.styleFrom(
+                                  iconSize: 50,
+                                  hoverColor: theme.colors.surfaceContainer
+                                      .withValues(alpha: 1.0),
+                                  backgroundColor:
+                                      theme.colors.primaryContainer,
+                                  foregroundColor: theme.colors.primary)),
+                        if (session.hasHotAudio)
+                          basicButton(Icons.mic_off_sharp, disableHotAudio,
+                              style: IconButton.styleFrom(
+                                  iconSize: 50,
+                                  hoverColor: theme.colors.errorContainer
+                                      .withValues(alpha: 1.0),
+                                  backgroundColor: theme.colors.errorContainer,
+                                  foregroundColor: theme.colors.error)),
+                        if (Platform.isAndroid &&
+                            audio.androidFoundPlaybackDevices &&
+                            session.inLiveSession) ...[
+                          SizedBox(width: isSmallScreen ? 5 : 20),
+                          basicButton(
+                              audio.playbackDeviceId ==
+                                      audio.androidSpeakerDeviceID
+                                  ? Icons.speaker
+                                  : Icons.volume_up,
+                              toggleAndroidSpeaker,
+                              style: IconButton.styleFrom(
+                                  iconSize: 50,
+                                  hoverColor: theme.colors.errorContainer
+                                      .withValues(alpha: 10.0),
+                                  backgroundColor: theme.colors.errorContainer,
+                                  foregroundColor: theme.colors.error)),
+                        ],
+                        if (session.inLiveSession)
+                          basicButton(
+                              Icons.phone_rounded,
+                              !session.leavingLiveSession
+                                  ? session.isAdmin
+                                      ? doDissolveSess
+                                      : doExitSess
+                                  : null,
+                              style: IconButton.styleFrom(
+                                iconSize: 50,
+                                foregroundColor: theme.colors.error,
+                                backgroundColor: theme.colors.errorContainer,
+                              )),
+                      ])
+                ])));
   }
 }

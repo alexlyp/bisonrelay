@@ -216,6 +216,8 @@ class ChatModel extends ChangeNotifier {
   bool get hasInstantCall => _hasInstantCall;
   final Map<String, RTDTSessionModel> _currentSessions = {};
   RTDTSessionModel? currentSessions(String chatID) => _currentSessions[chatID];
+  DateTime _instantCallStart = DateTime(1);
+  DateTime get instantCallStart => _instantCallStart;
 
   int _unreadMsgCount = 0;
   int get unreadMsgCount => _unreadMsgCount;
@@ -391,7 +393,7 @@ class ChatModel extends ChangeNotifier {
     startInstantCall.state = ICE_starting;
     _msgs.insert(0, ChatEventModel(startInstantCall, null));
     _hasInstantCall = true;
-
+    _instantCallStart = DateTime.now();
     _currentSessions[id] = currentSession!;
     notifyListeners();
   }
@@ -401,7 +403,7 @@ class ChatModel extends ChangeNotifier {
     endInstantCall.state = ICE_finished;
     _msgs.insert(0, ChatEventModel(endInstantCall, null));
     _hasInstantCall = false;
-
+    _instantCallStart = DateTime(1);
     _currentSessions.remove(id);
 
     notifyListeners();
