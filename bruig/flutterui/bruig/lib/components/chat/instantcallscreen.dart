@@ -118,17 +118,13 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     setState(() {
       publishers = session.info.metadata.publishers;
       ChatModel? peerChat;
-      print("session updated");
       for (var pub in publishers) {
         peerChat = client.getExistingChat(pub.publisherID);
         if (peerChat != null) {
-          print("setting live peer on session update ${pub.peerID}");
           livePeer = session.livePeer(pub.peerID);
           if (!livePeerConnected && livePeer != null) {
-            print("peer first connected");
             livePeerConnected = true;
           } else if (livePeerConnected && livePeer == null) {
-            print("peer disconnected, finish call");
             finishCall = true;
             livePeerConnected = false;
           }
@@ -137,7 +133,6 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     });
     if (finishCall) {
       await rtc.dissolveSession(session.sessionRV);
-      print("peer disonnected, finish call");
       chat.finishInstantCall();
     }
   }
@@ -174,7 +169,6 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
         if (!livePeerConnected) {
           livePeerConnected = true;
         }
-        print("setting live peer: init state");
         livePeer = session.livePeer(pub.peerID);
         break;
       }
@@ -186,7 +180,6 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   @override
   void didUpdateWidget(InstantCallScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    print("instant call widget update");
     if (oldWidget.session != session) {
       oldWidget.session.removeListener(sessionUpdated);
       session.addListener(sessionUpdated);
@@ -198,7 +191,6 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
           if (!livePeerConnected && livePeer != null) {
             livePeerConnected = true;
           }
-          print("setting live peer: instant call widget update");
         }
       }
     }
@@ -214,7 +206,6 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   @override
   Widget build(BuildContext context) {
     var isSmallScreen = checkIsScreenSmall(context);
-    print("build $livePeer ${session.inLiveSession}");
     // Helper to show an icon button or elevated button depending on screen size.
     Widget basicButton(IconData icon, VoidCallback? onPressed,
         {ButtonStyle? style}) {
@@ -235,22 +226,16 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Txt.H("Instant Call"),
+                      Txt.H(chat.nick),
                     ],
                   ),
                   ChatAvatar(
                     chat,
                     radius: 100,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Txt.L(chat.nick),
-                    ],
-                  ),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     if (session.inLiveSession && livePeer == null)
-                      Txt.S("Waiting for other participant to connect...")
+                      Txt.S("Connecting...")
                     else
                       Txt.S(
                           "${timeDifference(chat.instantCallStart, DateTime.now())}s"),
@@ -270,8 +255,8 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
                           basicButton(Icons.mic_sharp, makeAudioHot,
                               style: IconButton.styleFrom(
                                   iconSize: 50,
-                                  hoverColor: theme.colors.surfaceContainer
-                                      .withValues(alpha: 1.0),
+                                  hoverColor: theme.colors.primaryContainer
+                                      .withValues(alpha: 10.0),
                                   backgroundColor:
                                       theme.colors.primaryContainer,
                                   foregroundColor: theme.colors.primary)),
@@ -279,26 +264,27 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
                           basicButton(Icons.mic_off_sharp, disableHotAudio,
                               style: IconButton.styleFrom(
                                   iconSize: 50,
-                                  hoverColor: theme.colors.errorContainer
-                                      .withValues(alpha: 1.0),
-                                  backgroundColor: theme.colors.errorContainer,
-                                  foregroundColor: theme.colors.error)),
+                                  hoverColor: theme.colors.primary
+                                      .withValues(alpha: 10.0),
+                                  backgroundColor: theme.colors.primary,
+                                  foregroundColor:
+                                      theme.colors.primaryContainer)),
                         if (Platform.isAndroid &&
                             audio.androidFoundPlaybackDevices &&
                             session.inLiveSession) ...[
-                          SizedBox(width: isSmallScreen ? 5 : 20),
                           basicButton(
                               audio.playbackDeviceId ==
                                       audio.androidSpeakerDeviceID
-                                  ? Icons.speaker
-                                  : Icons.volume_up,
+                                  ? Icons.volume_up
+                                  : Icons.phone_android_sharp,
                               toggleAndroidSpeaker,
                               style: IconButton.styleFrom(
                                   iconSize: 50,
-                                  hoverColor: theme.colors.errorContainer
+                                  hoverColor: theme.colors.primaryContainer
                                       .withValues(alpha: 10.0),
-                                  backgroundColor: theme.colors.errorContainer,
-                                  foregroundColor: theme.colors.error)),
+                                  backgroundColor:
+                                      theme.colors.primaryContainer,
+                                  foregroundColor: theme.colors.primary)),
                         ],
                         if (session.inLiveSession)
                           basicButton(
