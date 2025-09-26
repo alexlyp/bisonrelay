@@ -177,16 +177,16 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
     //   ];
     // }
 
-    var showAvatar = widget.evnt.showAvatar && !isOwnMessage;
-    var showNick = !(widget.evnt.sameUser || isOwnMessage);
-
     bool isScreenSmall = checkIsScreenSmall(context);
+
+    var showAvatar = !widget.evnt.showAvatar && !isOwnMessage && !isScreenSmall;
+    var showNick = !(widget.evnt.sameUser || isOwnMessage) && !isScreenSmall;
+
     return Consumer<ThemeNotifier>(
         builder: (context, theme, _) => Container(
-            padding: showAvatar ? null : const EdgeInsets.only(left: 48),
             margin: EdgeInsets.only(
                 top: widget.evnt.sameUser ? 2 : 10,
-                right: isOwnMessage ? 10 : 0),
+                right: isOwnMessage ? 20 : 0),
             child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: isOwnMessage
@@ -209,43 +209,53 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
                           showChatSideMenuOnTap: true,
                         ),
                       ),
-                    )),
-                  Container(
-                      constraints: BoxConstraints(
-                        maxWidth: isScreenSmall
-                            ? MediaQuery.sizeOf(context).width * 0.7
-                            : MediaQuery.sizeOf(context).width * 0.4,
-                      ),
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: isOwnMessage
-                            ? theme.colors.surfaceContainer
-                            : theme.colors.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                          crossAxisAlignment: isOwnMessage
-                              ? CrossAxisAlignment.end
-                              : CrossAxisAlignment.start,
-                          children: <Widget>[
-                            if (showNick)
-                              Text(widget.nick,
-                                  style: theme.textStyleForNick(widget.nick)),
-                            Provider<DownloadSource>(
-                                create: (context) => DownloadSource(sourceID),
-                                child: MarkdownArea(
-                                    msg,
-                                    widget.userNick != widget.nick &&
-                                        msg.contains(widget.userNick))),
-                            SelectionContainer.disabled(
-                                child: Padding(
-                                    padding: const EdgeInsets.only(top: 5),
-                                    child: Tooltip(
-                                        message: fullDate,
-                                        child: Txt.S(hour,
-                                            color:
-                                                TextColor.onSurfaceVariant))))
-                          ]))
+                    ))
+                  else
+                    isScreenSmall
+                        ? const SizedBox(width: 20)
+                        : const SizedBox(width: 48),
+                  Flexible(
+                      child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isScreenSmall
+                                ? MediaQuery.sizeOf(context).width * 0.75
+                                : MediaQuery.sizeOf(context).width * 0.4,
+                          ),
+                          child: Container(
+                              padding: const EdgeInsets.only(
+                                  top: 5, left: 10, right: 10, bottom: 5),
+                              decoration: BoxDecoration(
+                                color: isOwnMessage
+                                    ? theme.colors.surfaceContainer
+                                    : theme.colors.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: isOwnMessage
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    if (showNick)
+                                      Text(widget.nick,
+                                          style: theme
+                                              .textStyleForNick(widget.nick)),
+                                    Provider<DownloadSource>(
+                                        create: (context) =>
+                                            DownloadSource(sourceID),
+                                        child: MarkdownArea(
+                                            msg,
+                                            widget.userNick != widget.nick &&
+                                                msg.contains(widget.userNick))),
+                                    SelectionContainer.disabled(
+                                        child: Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 5),
+                                            child: Tooltip(
+                                                message: fullDate,
+                                                child: Txt.S(hour,
+                                                    color: TextColor
+                                                        .onSurfaceVariant))))
+                                  ]))))
                 ])));
   }
 
