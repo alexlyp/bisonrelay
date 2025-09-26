@@ -10,6 +10,7 @@ import 'package:bruig/models/audio.dart';
 import 'package:bruig/models/realtimechat.dart';
 import 'package:bruig/models/uistate.dart';
 import 'package:golib_plugin/definitions.dart';
+import 'package:bruig/components/empty_widget.dart';
 import 'package:bruig/theme_manager.dart';
 import 'package:bruig/util.dart';
 import 'package:flutter/material.dart';
@@ -219,7 +220,7 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     return Consumer<ThemeNotifier>(
         builder: (context, theme, _) => Container(
             padding:
-                const EdgeInsets.only(left: 15, right: 15, top: 8, bottom: 12),
+                const EdgeInsets.only(left: 15, right: 15, top: 8, bottom: 0),
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -239,67 +240,74 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
                     else
                       Txt.S(
                           "${timeDifference(chat.instantCallStart, DateTime.now())}s"),
+                    const SizedBox(width: 20),
+                    Consumer<RealtimeChatRTTModel>(
+                        builder: (context, rtt, child) => rtt.lastRTTNano > 0
+                            ? Txt.S("RTT: ${rtt.lastRTTNanoStr}")
+                            : const Empty()),
                     if (session.inLiveSession &&
                         livePeer != null &&
                         (livePeer?.bufferCount ?? 0) > 0) ...[
                       const SizedBox(width: 20),
                       Txt.S(
-                          "Server Latency: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
+                          "Buffer: ${formatMsDuration(Duration(milliseconds: (livePeer?.bufferCount ?? 0) * 20))}")
                     ],
-                    SizedBox(width: isSmallScreen ? 5 : 20),
                   ]),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        if (session.inLiveSession && !session.hasHotAudio)
-                          basicButton(Icons.mic_sharp, makeAudioHot,
-                              style: IconButton.styleFrom(
-                                  iconSize: 50,
-                                  hoverColor: theme.colors.primaryContainer
-                                      .withValues(alpha: 10.0),
-                                  backgroundColor:
-                                      theme.colors.primaryContainer,
-                                  foregroundColor: theme.colors.primary)),
-                        if (session.hasHotAudio)
-                          basicButton(Icons.mic_off_sharp, disableHotAudio,
-                              style: IconButton.styleFrom(
-                                  iconSize: 50,
-                                  hoverColor: theme.colors.primary
-                                      .withValues(alpha: 10.0),
-                                  backgroundColor: theme.colors.primary,
-                                  foregroundColor:
-                                      theme.colors.primaryContainer)),
-                        if (Platform.isAndroid &&
-                            audio.androidFoundPlaybackDevices &&
-                            session.inLiveSession) ...[
-                          basicButton(
-                              audio.playbackDeviceId ==
-                                      audio.androidSpeakerDeviceID
-                                  ? Icons.volume_up
-                                  : Icons.phone_android_sharp,
-                              toggleAndroidSpeaker,
-                              style: IconButton.styleFrom(
-                                  iconSize: 50,
-                                  hoverColor: theme.colors.primaryContainer
-                                      .withValues(alpha: 10.0),
-                                  backgroundColor:
-                                      theme.colors.primaryContainer,
-                                  foregroundColor: theme.colors.primary)),
-                        ],
-                        if (session.inLiveSession)
-                          basicButton(
-                              Icons.phone_rounded,
-                              !session.leavingLiveSession
-                                  ? session.isAdmin
-                                      ? doDissolveSess
-                                      : doExitSess
-                                  : null,
-                              style: IconButton.styleFrom(
-                                iconSize: 50,
-                                foregroundColor: theme.colors.error,
-                                backgroundColor: theme.colors.errorContainer,
-                              )),
-                      ])
+                  Align(
+                      alignment: AlignmentDirectional.bottomCenter,
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            if (session.inLiveSession && !session.hasHotAudio)
+                              basicButton(Icons.mic_off_sharp, makeAudioHot,
+                                  style: IconButton.styleFrom(
+                                      iconSize: 60,
+                                      hoverColor: theme.colors.primary
+                                          .withValues(alpha: 10.0),
+                                      backgroundColor: theme.colors.primary,
+                                      foregroundColor:
+                                          theme.colors.primaryContainer)),
+                            if (session.hasHotAudio)
+                              basicButton(Icons.mic_sharp, disableHotAudio,
+                                  style: IconButton.styleFrom(
+                                      iconSize: 60,
+                                      hoverColor: theme.colors.primaryContainer
+                                          .withValues(alpha: 10.0),
+                                      backgroundColor:
+                                          theme.colors.primaryContainer,
+                                      foregroundColor: theme.colors.primary)),
+                            if (Platform.isAndroid &&
+                                audio.androidFoundPlaybackDevices &&
+                                session.inLiveSession) ...[
+                              basicButton(
+                                  audio.playbackDeviceId ==
+                                          audio.androidSpeakerDeviceID
+                                      ? Icons.volume_up
+                                      : Icons.phone_android_sharp,
+                                  toggleAndroidSpeaker,
+                                  style: IconButton.styleFrom(
+                                      iconSize: 60,
+                                      hoverColor: theme.colors.primaryContainer
+                                          .withValues(alpha: 10.0),
+                                      backgroundColor:
+                                          theme.colors.primaryContainer,
+                                      foregroundColor: theme.colors.primary)),
+                            ],
+                            if (session.inLiveSession)
+                              basicButton(
+                                  Icons.phone_rounded,
+                                  !session.leavingLiveSession
+                                      ? session.isAdmin
+                                          ? doDissolveSess
+                                          : doExitSess
+                                      : null,
+                                  style: IconButton.styleFrom(
+                                    iconSize: 60,
+                                    foregroundColor: theme.colors.error,
+                                    backgroundColor:
+                                        theme.colors.errorContainer,
+                                  )),
+                          ]))
                 ])));
   }
 }
