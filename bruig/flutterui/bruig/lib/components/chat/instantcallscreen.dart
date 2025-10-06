@@ -15,6 +15,7 @@ import 'package:bruig/theme_manager.dart';
 import 'package:bruig/util.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
 
 class InstantCallScreen extends StatefulWidget {
   final RealtimeChatModel rtc;
@@ -40,6 +41,8 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   RTDTLivePeerModel? livePeer;
   Timer? timerRefresh;
   bool livePeerConnected = false;
+  bool _isNear = false;
+  late StreamSubscription<dynamic> _proximityStreamSubscription;
 
   void leaveLiveSession() async {
     try {
@@ -162,6 +165,7 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   @override
   void initState() {
     super.initState();
+    listenSensor();
     session.addListener(sessionUpdated);
     publishers = session.info.metadata.publishers;
     for (var pub in publishers) {
@@ -201,7 +205,35 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   void dispose() {
     session.removeListener(sessionUpdated);
     timerRefresh?.cancel();
+    _proximityStreamSubscription.cancel();
     super.dispose();
+  }
+
+  Future<void> listenSensor() async {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      showErrorSnackbar(this, "Unable to exit session: $details");
+    };
+
+    // -------------------------------------------------- <ANDROID ONLY>
+    // NOTE: The following calls only work on Android. Otherwise, nothing happens.
+    // You only need to make this call if you want to turn off the screen.
+    // Add below permission in your AndroidManifest.xml file.
+    //     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    await ProximitySensor.setProximityScreenOff(true)
+        .onError((error, stackTrace) {
+      print("turning screen off");
+      showErrorSnackbar(
+          this, "could not enable screen off functionality: $error");
+
+      return null;
+    });
+    // -------------------------------------------------- <ANDROID ONLY>
+
+    _proximityStreamSubscription = ProximitySensor.events.listen((int event) {
+      setState(() {
+        _isNear = (event > 0) ? true : false;
+      });
+    });
   }
 
   @override
