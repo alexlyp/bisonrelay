@@ -5,6 +5,7 @@ import 'package:bruig/components/text.dart';
 import 'package:bruig/models/realtimechat.dart';
 import 'package:bruig/models/uistate.dart';
 import 'package:bruig/screens/feed.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:bruig/models/client.dart';
 import 'package:bruig/components/chat/types.dart';
@@ -113,6 +114,7 @@ class ReceivedSentPM extends StatefulWidget {
 }
 
 class _ReceivedSentPMState extends State<ReceivedSentPM> {
+  final ContextMenuController _contextMenuController = ContextMenuController();
   void eventChanged() => setState(() {});
 
   @override
@@ -138,6 +140,52 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
     if (!await launchUrl(Uri.parse(url))) {
       throw 'Could not launch $url';
     }
+  }
+
+  void selectAllContextTap(TapDownDetails details) {
+    _contextMenuController.show(
+      context: context,
+      contextMenuBuilder: (context) {
+        return AdaptiveTextSelectionToolbar.buttonItems(
+          anchors: TextSelectionToolbarAnchors(
+            primaryAnchor: details.globalPosition,
+          ),
+          buttonItems: [
+            ContextMenuButtonItem(
+              onPressed: () {
+                _contextMenuController.remove();
+                //.hide();
+                // Handle custom action
+              },
+              label: 'Custom Option',
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void selectAllContextLongDown(LongPressDownDetails details) {
+    _contextMenuController.show(
+      context: context,
+      contextMenuBuilder: (context) {
+        return AdaptiveTextSelectionToolbar.buttonItems(
+          anchors: TextSelectionToolbarAnchors(
+            primaryAnchor: details.globalPosition,
+          ),
+          buttonItems: [
+            ContextMenuButtonItem(
+              onPressed: () {
+                _contextMenuController.remove();
+                //.hide();
+                // Handle custom action
+              },
+              label: 'Custom Option',
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget buildMessage(BuildContext context) {
@@ -230,11 +278,12 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
                                     : theme.colors.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Column(
-                                  crossAxisAlignment: isOwnMessage
-                                      ? CrossAxisAlignment.end
-                                      : CrossAxisAlignment.start,
-                                  children: <Widget>[
+                              child: SelectionContainer.disabled(
+                                  child: Column(
+                                      crossAxisAlignment: isOwnMessage
+                                          ? CrossAxisAlignment.end
+                                          : CrossAxisAlignment.start,
+                                      children: <Widget>[
                                     if (showNick)
                                       Text(widget.nick,
                                           style: theme
@@ -242,20 +291,32 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
                                     Provider<DownloadSource>(
                                         create: (context) =>
                                             DownloadSource(sourceID),
-                                        child: MarkdownArea(
-                                            msg,
-                                            widget.userNick != widget.nick &&
-                                                msg.contains(widget.userNick))),
-                                    SelectionContainer.disabled(
-                                        child: Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 5),
-                                            child: Tooltip(
-                                                message: fullDate,
-                                                child: Txt.S(hour,
-                                                    color: TextColor
-                                                        .onSurfaceVariant))))
-                                  ]))))
+                                        child: GestureDetector(
+                                            onSecondaryTapDown: (details) {
+                                              if (isScreenSmall) {
+                                                selectAllContextTap(details);
+                                              }
+                                            },
+                                            onLongPressDown: (details) {
+                                              if (isScreenSmall) {
+                                                selectAllContextLongDown(
+                                                    details);
+                                              }
+                                            },
+                                            child: MarkdownArea(
+                                                msg,
+                                                widget.userNick !=
+                                                        widget.nick &&
+                                                    msg.contains(
+                                                        widget.userNick)))),
+                                    Padding(
+                                        padding: const EdgeInsets.only(top: 5),
+                                        child: Tooltip(
+                                            message: fullDate,
+                                            child: Txt.S(hour,
+                                                color: TextColor
+                                                    .onSurfaceVariant)))
+                                  ])))))
                 ])));
   }
 
