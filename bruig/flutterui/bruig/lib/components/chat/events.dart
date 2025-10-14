@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:bruig/components/containers.dart';
 import 'package:bruig/components/text.dart';
+import 'package:bruig/components/snackbars.dart';
 import 'package:bruig/models/realtimechat.dart';
 import 'package:bruig/models/uistate.dart';
 import 'package:bruig/screens/feed.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:bruig/models/client.dart';
 import 'package:bruig/components/chat/types.dart';
 import 'package:golib_plugin/definitions.dart';
@@ -142,7 +145,19 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
     }
   }
 
-  void selectAllContextTap(TapDownDetails details) {
+  void copy(BuildContext context, String toCopy) {
+    Clipboard.setData(ClipboardData(text: toCopy));
+
+    var textMsg = toCopy.substring(0, min(toCopy.length, 36));
+    if (textMsg.length < toCopy.length) {
+      textMsg += "...";
+    }
+    showSuccessSnackbar(context, "Copied \"$textMsg\" to clipboard");
+  }
+
+  void messageSecondaryTapContext(
+      TapDownDetails details, String msg, String fullDate, String nick) {
+    var toCopy = "$fullDate $nick - $msg";
     _contextMenuController.show(
       context: context,
       contextMenuBuilder: (context) {
@@ -153,11 +168,12 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
           buttonItems: [
             ContextMenuButtonItem(
               onPressed: () {
+                copy(context, toCopy);
                 _contextMenuController.remove();
                 //.hide();
                 // Handle custom action
               },
-              label: 'Custom Option',
+              label: 'Copy',
             ),
           ],
         );
@@ -165,7 +181,9 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
     );
   }
 
-  void selectAllContextLongDown(LongPressDownDetails details) {
+  void messageLongDownContext(
+      LongPressDownDetails details, String msg, String fullDate, String nick) {
+    var toCopy = "$fullDate $nick - $msg";
     _contextMenuController.show(
       context: context,
       contextMenuBuilder: (context) {
@@ -176,11 +194,12 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
           buttonItems: [
             ContextMenuButtonItem(
               onPressed: () {
+                copy(context, toCopy);
                 _contextMenuController.remove();
                 //.hide();
                 // Handle custom action
               },
-              label: 'Custom Option',
+              label: 'Copy',
             ),
           ],
         );
@@ -242,8 +261,7 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
                     : MainAxisAlignment.start,
                 children: <Widget>[
                   if (showAvatar)
-                    SelectionContainer.disabled(
-                        child: Container(
+                    Container(
                       height: 28,
                       width: 28,
                       margin: const EdgeInsets.only(
@@ -257,66 +275,67 @@ class _ReceivedSentPMState extends State<ReceivedSentPM> {
                           showChatSideMenuOnTap: true,
                         ),
                       ),
-                    ))
+                    )
                   else
                     isScreenSmall
                         ? const SizedBox(width: 20)
                         : const SizedBox(width: 48),
                   Flexible(
-                      child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: isScreenSmall
-                                ? MediaQuery.sizeOf(context).width * 0.75
-                                : MediaQuery.sizeOf(context).width * 0.4,
-                          ),
-                          child: Container(
-                              padding: const EdgeInsets.only(
-                                  top: 5, left: 10, right: 10, bottom: 5),
-                              decoration: BoxDecoration(
-                                color: isOwnMessage
-                                    ? theme.colors.surfaceContainer
-                                    : theme.colors.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(10),
+                      child: GestureDetector(
+                          onSecondaryTapDown: (details) {
+                            if (!isScreenSmall) {
+                              messageSecondaryTapContext(
+                                  details, msg, fullDate, widget.nick);
+                            }
+                          },
+                          onLongPressDown: (details) {
+                            if (isScreenSmall) {
+                              messageLongDownContext(
+                                  details, msg, fullDate, widget.nick);
+                            }
+                          },
+                          child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: isScreenSmall
+                                    ? MediaQuery.sizeOf(context).width * 0.75
+                                    : MediaQuery.sizeOf(context).width * 0.4,
                               ),
-                              child: SelectionContainer.disabled(
+                              child: Container(
+                                  padding: const EdgeInsets.only(
+                                      top: 5, left: 10, right: 10, bottom: 5),
+                                  decoration: BoxDecoration(
+                                    color: isOwnMessage
+                                        ? theme.colors.surfaceContainer
+                                        : theme.colors.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                   child: Column(
                                       crossAxisAlignment: isOwnMessage
                                           ? CrossAxisAlignment.end
                                           : CrossAxisAlignment.start,
                                       children: <Widget>[
-                                    if (showNick)
-                                      Text(widget.nick,
-                                          style: theme
-                                              .textStyleForNick(widget.nick)),
-                                    Provider<DownloadSource>(
-                                        create: (context) =>
-                                            DownloadSource(sourceID),
-                                        child: GestureDetector(
-                                            onSecondaryTapDown: (details) {
-                                              if (isScreenSmall) {
-                                                selectAllContextTap(details);
-                                              }
-                                            },
-                                            onLongPressDown: (details) {
-                                              if (isScreenSmall) {
-                                                selectAllContextLongDown(
-                                                    details);
-                                              }
-                                            },
+                                        if (showNick)
+                                          Text(widget.nick,
+                                              style: theme.textStyleForNick(
+                                                  widget.nick)),
+                                        Provider<DownloadSource>(
+                                            create: (context) =>
+                                                DownloadSource(sourceID),
                                             child: MarkdownArea(
                                                 msg,
                                                 widget.userNick !=
                                                         widget.nick &&
                                                     msg.contains(
-                                                        widget.userNick)))),
-                                    Padding(
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Tooltip(
-                                            message: fullDate,
-                                            child: Txt.S(hour,
-                                                color: TextColor
-                                                    .onSurfaceVariant)))
-                                  ])))))
+                                                        widget.userNick))),
+                                        Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 5),
+                                            child: Tooltip(
+                                                message: fullDate,
+                                                child: Txt.S(hour,
+                                                    color: TextColor
+                                                        .onSurfaceVariant)))
+                                      ])))))
                 ])));
   }
 
