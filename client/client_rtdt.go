@@ -32,8 +32,16 @@ import (
 //
 //                                                 handleRMRTDTSessionInvite()
 //                   <--- RMRTDTSessionInviteAccept ---/
+//									or
+// 					 <--- RMRTDTSessionInviteCancel ---/
 //
 // handleRMRTDTSessionInviteAccept()
+//        \------- RMRTDTSession ------>
+//
+//                                                handleRTDTSessionUpdate()
+//
+//                     (Proceed to RTDT comm flows)
+// handleRMRTDTSessionInviteCancel()
 //        \------- RMRTDTSession ------>
 //
 //                                                handleRTDTSessionUpdate()
@@ -655,6 +663,93 @@ func (c *Client) AcceptRTDTSessionInviteByRV(inviter UserID, sessRV zkidentity.S
 	return c.AcceptRTDTSessionInvite(inviter, &invite.Invite, acceptAsPublisher)
 }
 
+// CancelRTDTSessionInvite cancels an invite to join an RTDT session.
+func (c *Client) CancelRTDTSessionInvite(inviter UserID, invite *rpc.RMRTDTSessionInvite) error {
+	ru, err := c.UserByID(inviter)
+	if err != nil {
+		return err
+	}
+	if invite.GC != nil {
+		// Check associated GC exists.
+		gc, err := c.getGC(*invite.GC)
+		if err != nil {
+			return fmt.Errorf("invite is for session associated "+
+				"with GC %s but client is not a member of this GC",
+				invite.GC)
+		}
+
+		// Check inviter is admin on that GC.
+		if err := c.uidHasGCPerm(&gc.Metadata, inviter); err != nil {
+			return fmt.Errorf("invite is for session associated "+
+				"with GC %s but client is not an admin of this GC: %v",
+				invite.GC, err)
+		}
+
+		// Check GC already has a RTDT session.
+		if gc.RTDTSessionRV != nil && *gc.RTDTSessionRV != invite.RV {
+			return fmt.Errorf("invite is for session associated "+
+				"with GC %s but GC already has associated session %s",
+				invite.GC, gc.RTDTSessionRV)
+		}
+	}
+
+	rm := rpc.RMRTDTSessionInviteCancel{
+		RV:  invite.RV,
+		Tag: invite.Tag,
+	}
+
+	err = c.dbUpdate(func(tx clientdb.ReadWriteTx) error {
+		sess, err := c.db.GetRTDTSession(tx, &invite.RV)
+		if err != nil && !errors.Is(err, clientdb.ErrNotFound) {
+			return err
+		}
+
+		// Ignore if session exists with generation == 0 because it is
+		// an accepted invitation for which we have not received the
+		// actual data yet.
+		if sess != nil && sess.Metadata.Generation > 0 {
+			return clientdb.ErrAlreadyExists
+		}
+
+		// Remove session
+		if err := c.db.RemoveRTDTSession(tx, &invite.RV); err != nil {
+			return err
+		}
+
+		if err := c.db.RemoveRTDTSessionInvite(tx, inviter, invite.RV); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	ru.log.Infof("Canceling invite to RTDT session %s as peer %s",
+		invite.RV, invite.PeerID)
+
+	// Send reply accepting.
+	payEvent := fmt.Sprintf("rtdt.cancel.%s", invite.RV.String())
+	return c.sendWithSendQ(payEvent, rm, inviter)
+}
+
+// CancelRTDTSessionInviteByRV cancels an invite to join an RTDT session by RV.
+// The invite must have been received already.
+func (c *Client) CancelRTDTSessionInviteByRV(inviter UserID, sessRV zkidentity.ShortID) error {
+	var invite *clientdb.RTDTSessionInvite
+	err := c.dbView(func(tx clientdb.ReadTx) error {
+		var err error
+		invite, err = c.db.GetRTDTSessionInvite(tx, inviter, sessRV)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.CancelRTDTSessionInvite(inviter, &invite.Invite)
+}
+
 // sendRTDTSessionUpdate sends an update of the given session to the specified
 // targets.
 func (c *Client) sendRTDTSessionUpdate(metadata rpc.RMRTDTSession, targets []UserID) error {
@@ -679,7 +774,6 @@ func (c *Client) handleRMRTDTAcceptInvite(ru *RemoteUser, accept rpc.RMRTDTSessi
 		if !sess.LocalIsAdmin() {
 			return errNotAdmin
 		}
-
 		oldMeta = sess.Metadata
 
 		for i := range sess.Members {
@@ -773,6 +867,73 @@ func (c *Client) handleRMRTDTAcceptInvite(ru *RemoteUser, accept rpc.RMRTDTSessi
 	if sess.Metadata.IsInstant {
 		c.maybeJoinAndMakeInstantRTDTSessionHot(accept.RV)
 	}
+
+	return nil
+}
+
+// handleRMRTDTCancelInvite handles remote clients canceling our invitation to
+// join a RTDT session.
+func (c *Client) handleRMRTDTCancelInvite(ru *RemoteUser, cancel rpc.RMRTDTSessionInviteAccept) error {
+	var canceled = false
+	var sess *clientdb.RTDTSession
+	var oldMeta rpc.RMRTDTSession
+	var peerID rpc.RTDTPeerID
+	err := c.dbUpdate(func(tx clientdb.ReadWriteTx) error {
+		var err error
+		sess, err = c.db.GetRTDTSession(tx, &cancel.RV)
+		if err != nil {
+			return err
+		}
+
+		if !sess.LocalIsAdmin() {
+			return errNotAdmin
+		}
+		oldMeta = sess.Metadata
+
+		for i := range sess.Members {
+			m := &sess.Members[i]
+			if m.UID != ru.ID() {
+				continue
+			}
+			if cancel.Tag != m.Tag {
+				return fmt.Errorf("wrong tag value (got %d, want %d)",
+					cancel.Tag, m.Tag)
+			}
+			if m.AcceptedTimestamp != nil {
+				return errors.New("already accepted invite")
+			}
+
+			peerID = m.PeerID
+
+			if cancel.PublisherKey != nil {
+				sess.Metadata.Generation += 1
+				sess.Metadata.Publishers = append(sess.Metadata.Publishers, rpc.RMRTDTSessionPublisher{
+					PublisherID:  ru.ID(),
+					PublisherKey: *cancel.PublisherKey,
+					Alias:        ru.Nick(),
+					PeerID:       m.PeerID,
+				})
+			}
+
+			canceled = true
+			break
+		}
+		if !canceled {
+			return errors.New("user not found in list of sent invites")
+		}
+
+		return c.db.UpdateRTDTSession(tx, sess)
+	})
+	if err != nil {
+		return err
+	}
+
+	ru.log.Infof("User canceled our invite to join RTDT session %s as peer %s",
+		cancel.RV, peerID)
+
+	c.ntfns.notifyRTDTSessionInviteCanceled(ru, cancel.RV)
+	ntfnUpdate := c.ntfns.buildRTDTSessionUpdateNtfn(&oldMeta, &sess.Metadata)
+	c.ntfns.notifyRTDTSessionUpdated(ru, &ntfnUpdate)
 
 	return nil
 }

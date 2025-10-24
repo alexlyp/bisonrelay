@@ -2558,6 +2558,21 @@ class InvitedToRTDTSess extends ChatEvent {
 }
 
 @JsonSerializable()
+class CancelRTDTInviteArgs {
+  final String inviter;
+  final RMRTDTSessionInvite? invite;
+  @JsonKey(name: "as_publisher")
+  final bool asPublisher;
+  @JsonKey(name: "sess_rv")
+  final String? sessRV;
+
+  CancelRTDTInviteArgs(
+      this.inviter, this.invite, this.asPublisher, this.sessRV);
+
+  Map<String, dynamic> toJson() => _$CancelRTDTInviteArgsToJson(this);
+}
+
+@JsonSerializable()
 class AcceptRTDTInviteArgs {
   final String inviter;
   final RMRTDTSessionInvite? invite;
@@ -4138,6 +4153,9 @@ abstract class PluginPlatform {
   Future<void> rtdtAcceptInvite(AcceptRTDTInviteArgs args) async =>
       await (asyncCall(CTRTDTAcceptInvite, args.toJson()));
 
+  Future<void> rtdtCancelInvite(CancelRTDTInviteArgs args) async =>
+      await (asyncCall(CTRTDTCancelInvite, args.toJson()));
+
   Future<void> rtdtLeaveSession(String sessionRV) async =>
       await (asyncCall(CTRTDTLeaveLiveSession, sessionRV));
 
@@ -4382,6 +4400,7 @@ const int CTAudioSetPlaybackGain = 0xad;
 const int CTAudioGetPlaybackGain = 0xae;
 const int CTCancelKX = 0xaf;
 const int CTCancelMediateID = 0xb0;
+const int CTRTDTCancelInvite = 0xb1;
 
 const int notificationsStartID = 0x1000;
 

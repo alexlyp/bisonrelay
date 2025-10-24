@@ -680,10 +680,19 @@ class RealtimeChatModel extends ChangeNotifier {
       invite.inviter + invite.invite.rv + invite.invite.tag.toString();
 
   final List<String> _canceledInvites = [];
-  void cancelInvite(InvitedToRTDTSess invite) =>
-      _canceledInvites.add(_inviteKey(invite));
   bool isInviteCanceled(InvitedToRTDTSess invite) =>
       _canceledInvites.contains(_inviteKey(invite));
+  Future<void> cancelInvite(InvitedToRTDTSess invite) async {
+    _canceledInvites.add(_inviteKey(invite));
+    await Golib.rtdtCancelInvite(CancelRTDTInviteArgs(
+        invite.inviter, invite.invite, invite.invite.allowedAsPublisher, null));
+  }
+
+  Future<void> cancelInviteByRV(String inviter, String sessRV) async {
+    const allowedAsPublisher = true; // Need to parametrize?
+    await Golib.rtdtCancelInvite(
+        CancelRTDTInviteArgs(inviter, null, allowedAsPublisher, sessRV));
+  }
 
   final List<String> _acceptedInvites = [];
   bool isInviteAccepted(InvitedToRTDTSess invite) =>

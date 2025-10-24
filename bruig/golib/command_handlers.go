@@ -2613,6 +2613,23 @@ func handleClientCmd(cc *clientCtx, cmd *cmd) (interface{}, error) {
 
 		return nil, err
 
+	case CTRTDTCancelInvite:
+		var args cancelRTDTInviteArgs
+		if err := cmd.decode(&args); err != nil {
+			return nil, err
+		}
+
+		var err error
+		if args.SessRV != nil {
+			err = cc.c.CancelRTDTSessionInviteByRV(args.Inviter, *args.SessRV)
+		} else if args.Invite != nil {
+			err = cc.c.CancelRTDTSessionInvite(args.Inviter, args.Invite)
+		} else {
+			err = errors.New("missing sessRV or invite")
+		}
+
+		return nil, err
+
 	case CTRTDTLeaveLiveSession:
 		var rv zkidentity.ShortID
 		if err := cmd.decode(&rv); err != nil {
