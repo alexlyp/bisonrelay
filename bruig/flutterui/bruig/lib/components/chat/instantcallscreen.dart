@@ -16,6 +16,7 @@ import 'package:bruig/util.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proximity_sensor/proximity_sensor.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class InstantCallScreen extends StatefulWidget {
   final RealtimeChatModel rtc;
@@ -42,6 +43,9 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
   Timer? timerRefresh;
   bool livePeerConnected = false;
   bool _isNear = false;
+
+  late AudioPlayer player = AudioPlayer();
+
   late StreamSubscription<dynamic> _proximityStreamSubscription;
 
   void leaveLiveSession() async {
@@ -180,6 +184,16 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     }
     // Create a timer to refresh details every 1 second (bufferCount, etc).
     timerRefresh = Timer.periodic(Duration(seconds: 1), refreshIfLive);
+
+    // Create the audio player.
+    player = AudioPlayer();
+
+    player.setReleaseMode(ReleaseMode.loop);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await player.setSource(AssetSource('br_instant_call.mp3'));
+      await player.resume();
+    });
   }
 
   @override
@@ -195,6 +209,7 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
           livePeer = session.livePeer(pub.peerID);
           if (!livePeerConnected && livePeer != null) {
             livePeerConnected = true;
+            player.stop();
           }
         }
       }
@@ -206,6 +221,7 @@ class _InstantCallScreenState extends State<InstantCallScreen> {
     session.removeListener(sessionUpdated);
     timerRefresh?.cancel();
     _proximityStreamSubscription.cancel();
+    player.dispose();
     super.dispose();
   }
 
