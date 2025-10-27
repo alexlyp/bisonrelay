@@ -2859,6 +2859,14 @@ class RTDTInstantCallJoined extends RTDTSessionEvent {
 }
 
 @JsonSerializable()
+class RTDTSessionInviteCanceled extends RTDTUserAndSess {
+  RTDTSessionInviteCanceled(super.sessionRV, super.peerID, super.uid);
+
+  factory RTDTSessionInviteCanceled.fromJson(Map<String, dynamic> json) =>
+      _$RTDTSessionInviteCanceledFromJson(json);
+}
+
+@JsonSerializable()
 class LiveRTDTPeer {
   @JsonKey(name: "has_sound_stream")
   final bool hasSoundStream;
@@ -3316,6 +3324,11 @@ mixin NtfStreams {
       case NTRTDTRTTCalculated:
         var event = RTDTRTT.fromJson(payload);
         ntfRTDTRTTCalculated.add(event);
+        break;
+
+      case NTRTDTSessionInviteCanceled:
+        var event = RTDTSessionInviteCanceled.fromJson(payload);
+        ntfRTDTSessEvents.add(event);
         break;
 
       default:
@@ -4467,3 +4480,4 @@ const int NTRTDTRemadeSessHot = 0x103c;
 const int NTRTDTChatMsgReceived = 0x103d;
 const int NTRTDTRTTCalculated = 0x103e;
 const int NTRTDTJoinedInstantCall = 0x103f;
+const int NTRTDTSessionInviteCanceled = 0x1040;

@@ -484,6 +484,22 @@ class RealtimeChatModel extends ChangeNotifier {
         snackbar.error(msg);
       }
 
+      if (updt is RTDTSessionInviteCanceled) {
+        var isSessInstant = _sessions[updt.sessionRV]?.isInstant ?? false;
+        _removeSess(updt.sessionRV, notifyRemoved: true);
+        var chat = client.getExistingChat(updt.uid);
+        var nick = chat?.nick ?? updt.uid;
+        if (isSessInstant) {
+          chat?.finishInstantCall();
+        }
+        var msg = "$nick rejected invite to instant call ${updt.sessionRV}";
+        if (chat != null) {
+          chat.append(
+              ChatEventModel(SynthChatEvent(msg, SCE_received), null), false);
+        }
+        snackbar.error(msg);
+      }
+
       if (updt is RTDTPeerExited) {
         _sessions[updt.sessionRV]?._removeMember(updt.peerID);
         _updateSess(updt.sessionRV);

@@ -580,6 +580,14 @@ func handleInitClient(handle uint32, args initClient) error {
 		notify(NTRTDTSessDissolved, event, nil)
 	}))
 
+	ntfns.Register(client.OnRTDTSessionInviteCanceled(func(ru *client.RemoteUser, sessRV zkidentity.ShortID) {
+		event := rtdtUserAndSess{
+			UID:       ru.ID(),
+			SessionRV: sessRV,
+		}
+		notify(NTRTDTSessionInviteCanceled, event, nil)
+	}))
+
 	ntfns.Register(client.OnRTDTPeerExitedSession(func(ru *client.RemoteUser, sessRV zkidentity.ShortID, peerID rpc.RTDTPeerID) {
 		event := rtdtUserAndSess{
 			UID:       ru.ID(),

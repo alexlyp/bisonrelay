@@ -2803,6 +2803,22 @@ Map<String, dynamic> _$RTDTPeerExitedToJson(RTDTPeerExited instance) =>
       'uid': instance.uid,
     };
 
+RTDTSessionInviteCanceled _$RTDTSessionInviteCanceledFromJson(
+        Map<String, dynamic> json) =>
+    RTDTSessionInviteCanceled(
+      json['session_rv'] as String,
+      (json['peer_id'] as num).toInt(),
+      json['uid'] as String,
+    );
+
+Map<String, dynamic> _$RTDTSessionInviteCanceledToJson(
+        RTDTSessionInviteCanceled instance) =>
+    <String, dynamic>{
+      'session_rv': instance.sessionRV,
+      'peer_id': instance.peerID,
+      'uid': instance.uid,
+    };
+
 LiveRTDTPeer _$LiveRTDTPeerFromJson(Map<String, dynamic> json) => LiveRTDTPeer(
       json['has_sound_stream'] as bool,
       json['has_sound'] as bool,

@@ -875,10 +875,6 @@ func (c *Client) handleRMRTDTCancelInvite(ru *RemoteUser, cancel rpc.RMRTDTSessi
 		return err
 	}
 
-	ru.log.Infof("User with peer id %s canceled invite to RTDT session %s",
-		peerID, cancel.RV)
-	c.ntfns.notifyRTDTSessionInviteCanceled(ru, cancel.RV)
-
 	// Send update to all existing members if this generated a metadata
 	// change.
 	if wasPublisher {
@@ -887,6 +883,15 @@ func (c *Client) handleRMRTDTCancelInvite(ru *RemoteUser, cancel rpc.RMRTDTSessi
 
 	ru.log.Infof("User canceled our invite to join RTDT session %s as peer %s",
 		cancel.RV, peerID)
+	if len(sess.MemberUIDs(c.PublicID())) == 0 {
+		// Update local client that invite to only other member of chat we canceled
+		// and we should dissolve this session.
+		err = c.DissolveRTDTSession(&cancel.RV)
+		if err != nil {
+			return err
+		}
+		c.ntfns.notifyRTDTSessionInviteCanceled(ru, cancel.RV)
+	}
 
 	return nil
 }
