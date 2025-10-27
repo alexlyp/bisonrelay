@@ -699,23 +699,6 @@ func (c *Client) CancelRTDTSessionInvite(inviter UserID, invite *rpc.RMRTDTSessi
 	}
 
 	err = c.dbUpdate(func(tx clientdb.ReadWriteTx) error {
-		sess, err := c.db.GetRTDTSession(tx, &invite.RV)
-		if err != nil && !errors.Is(err, clientdb.ErrNotFound) {
-			return err
-		}
-
-		// Ignore if session exists with generation == 0 because it is
-		// an accepted invitation for which we have not received the
-		// actual data yet.
-		if sess != nil && sess.Metadata.Generation > 0 {
-			return clientdb.ErrAlreadyExists
-		}
-
-		// Remove session
-		if err := c.db.RemoveRTDTSession(tx, &invite.RV); err != nil {
-			return err
-		}
-
 		if err := c.db.RemoveRTDTSessionInvite(tx, inviter, invite.RV); err != nil {
 			return err
 		}
