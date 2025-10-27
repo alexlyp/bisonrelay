@@ -873,67 +873,37 @@ func (c *Client) handleRMRTDTAcceptInvite(ru *RemoteUser, accept rpc.RMRTDTSessi
 
 // handleRMRTDTCancelInvite handles remote clients canceling our invitation to
 // join a RTDT session.
-func (c *Client) handleRMRTDTCancelInvite(ru *RemoteUser, cancel rpc.RMRTDTSessionInviteAccept) error {
-	var canceled = false
+func (c *Client) handleRMRTDTCancelInvite(ru *RemoteUser, cancel rpc.RMRTDTSessionInviteCancel) error {
 	var sess *clientdb.RTDTSession
-	var oldMeta rpc.RMRTDTSession
 	var peerID rpc.RTDTPeerID
-	err := c.dbUpdate(func(tx clientdb.ReadWriteTx) error {
-		var err error
-		sess, err = c.db.GetRTDTSession(tx, &cancel.RV)
-		if err != nil {
-			return err
-		}
-
-		if !sess.LocalIsAdmin() {
-			return errNotAdmin
-		}
-		oldMeta = sess.Metadata
-
-		for i := range sess.Members {
-			m := &sess.Members[i]
-			if m.UID != ru.ID() {
-				continue
-			}
-			if cancel.Tag != m.Tag {
-				return fmt.Errorf("wrong tag value (got %d, want %d)",
-					cancel.Tag, m.Tag)
-			}
-			if m.AcceptedTimestamp != nil {
-				return errors.New("already accepted invite")
-			}
-
-			peerID = m.PeerID
-
-			if cancel.PublisherKey != nil {
-				sess.Metadata.Generation += 1
-				sess.Metadata.Publishers = append(sess.Metadata.Publishers, rpc.RMRTDTSessionPublisher{
-					PublisherID:  ru.ID(),
-					PublisherKey: *cancel.PublisherKey,
-					Alias:        ru.Nick(),
-					PeerID:       m.PeerID,
-				})
-			}
-
-			canceled = true
-			break
-		}
-		if !canceled {
-			return errors.New("user not found in list of sent invites")
-		}
-
-		return c.db.UpdateRTDTSession(tx, sess)
-	})
+	memberID := ru.ID()
+	sess, peerID, wasPublisher, err := c.removeFromRTDTSession(&cancel.RV, &memberID)
+	if errors.Is(err, errNotAdmin) {
+		ru.log.Warnf("User sent request to cancel invite to RTDT session %s "+
+			"when local client is not an admin", cancel.RV)
+		return nil
+	}
+	if errors.Is(err, errNotAMember) {
+		ru.log.Warnf("User sent request to cancel invite to RTDT session %s "+
+			"when they were not a member", cancel.RV)
+		return nil
+	}
 	if err != nil {
 		return err
 	}
 
+	ru.log.Infof("User with peer id %s canceled invite to RTDT session %s",
+		peerID, cancel.RV)
+	c.ntfns.notifyRTDTSessionInviteCanceled(ru, cancel.RV)
+
+	// Send update to all existing members if this generated a metadata
+	// change.
+	if wasPublisher {
+		return c.sendRTDTSessionUpdate(sess.Metadata, sess.MemberUIDs(c.PublicID()))
+	}
+
 	ru.log.Infof("User canceled our invite to join RTDT session %s as peer %s",
 		cancel.RV, peerID)
-
-	c.ntfns.notifyRTDTSessionInviteCanceled(ru, cancel.RV)
-	ntfnUpdate := c.ntfns.buildRTDTSessionUpdateNtfn(&oldMeta, &sess.Metadata)
-	c.ntfns.notifyRTDTSessionUpdated(ru, &ntfnUpdate)
 
 	return nil
 }
